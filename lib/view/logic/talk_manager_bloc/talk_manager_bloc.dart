@@ -21,8 +21,6 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
   int get getChatType => isTempl ? 1 : 0;
   TalkManagerBloc({required this.isTempl, required this.messageDatabase})
       : super(TalkManagerState([])) {
-    //messageDatabase.select(messageDatabase.chats).where((tbl) => tbl.)
-
     messageStream = (messageDatabase.select(messageDatabase.messages)
           ..orderBy([
             (u) => OrderingTerm(expression: u.data, mode: OrderingMode.desc)
@@ -31,22 +29,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
 
     messageStream.listen(
       (messageList) async {
-        Map<int, ExtendedChat> m = {};
-        for (var msg in messageList) {
-          Chat chat = await (messageDatabase.select(messageDatabase.chats)
-                ..where((tbl) => tbl.chatId.equals(msg.chatId))
-                ..where((tbl) => tbl.chatType.equals(getChatType)))
-              .getSingle();
-          m.putIfAbsent(msg.chatId, () => ExtendedChat.fromChat(chat, [msg]));
-        }
-        var chats = await (messageDatabase.select(messageDatabase.chats)
-              ..where((tbl) => tbl.chatType.equals(getChatType)))
-            .get();
-        for (var leftChat in chats) {
-          m.putIfAbsent(
-              leftChat.chatId, () => ExtendedChat.fromChat(leftChat, []));
-        }
-        add(_UpdateChats(m.values.toList()));
+        add(_UpdateChats(await collectChats(messageList)));
       },
     );
 
@@ -59,8 +42,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
               chatName: event.chatName,
               creationDate: DateTime.now()));
 
-    //messageStream.publish()
-      
+      //messageStream.publish()
     });
 
     on<TalkManagerEvent>((event, emit) {
@@ -71,5 +53,24 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
       emit(TalkManagerState(event.chatList));
     });
     on<LoadChats>((event, emit) {});
+  }
+
+  Future<List<ExtendedChat>> collectChats(List<Message> messageList) async {
+    Map<int, ExtendedChat> m = {};
+    for (var msg in messageList) {
+      Chat chat = await (messageDatabase.select(messageDatabase.chats)
+            ..where((tbl) => tbl.chatId.equals(msg.chatId))
+            ..where((tbl) => tbl.chatType.equals(getChatType)))
+          .getSingle();
+      m.putIfAbsent(msg.chatId, () => ExtendedChat.fromChat(chat, [msg]));
+    }
+    var chats = await (messageDatabase.select(messageDatabase.chats)
+          ..where((tbl) => tbl.chatType.equals(getChatType)))
+        .get();
+    for (var leftChat in chats) {
+      m.putIfAbsent(leftChat.chatId, () => ExtendedChat.fromChat(leftChat, []));
+    }
+
+    return m.values.toList();
   }
 }
