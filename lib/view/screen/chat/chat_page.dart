@@ -1,3 +1,4 @@
+import 'package:ai_assist/model/db/c/message_db.dart';
 import 'package:ai_assist/view/logic/chat_manager/chat_manager.dart';
 import 'package:ai_assist/view/widget/chat_header_sliver.dart';
 import 'package:auto_route/auto_route.dart';
@@ -14,9 +15,8 @@ import '../../logic/chat_bloc/chat_bloc.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage(
-      {super.key, required this.isTemplate, @PathParam('n') required this.n});
-  final bool isTemplate;
-  final int n;
+      {super.key, @PathParam('chatId') required this.chatId});
+  final int chatId;
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
@@ -27,11 +27,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ChatBloc(
-          isTemplate: widget.isTemplate,
-          chatGPT: widget.isTemplate
-              ? context.read<ChatManager>().newOnlineChat
-              : context.read<ChatManager>().newOfflineChat),
+      create: (context) => ChatBloc(chatId: widget.chatId, messageDatabase: context.read<MessageDatabase>()),
       child: Builder(builder: (context) {
         return Scaffold(
           appBar: AppBar(

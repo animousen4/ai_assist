@@ -55,7 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             body: child,
             floatingActionButton: FloatingActionButton(
-              onPressed: () {},
+              onPressed: () {
+                talkm.add(AddChat("Old chat"));
+              },
               child: Icon(Icons.add),
             ),
           );
@@ -70,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isTempl: false, messageDatabase: context.read<MessageDatabase>())
       ..add(LoadChats());
     templ = TalkManagerBloc(
-        isTempl: true, messageDatabase: context.read<TemplateDatabase>())
+        isTempl: true, messageDatabase: context.read<MessageDatabase>())
       ..add(LoadChats());
     super.initState();
   }

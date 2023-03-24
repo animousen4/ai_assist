@@ -45,9 +45,6 @@ class MyApp extends StatelessWidget {
           create: (context) => MessageDatabase(),
           dispose: (context, value) => value.close(),
         ),
-        Provider(
-            create: (context) => TemplateDatabase(),
-            dispose: (context, value) => value.close()),
         Provider<ChatManager>.value(value: chatManager)
       ],
       child: MaterialApp.router(

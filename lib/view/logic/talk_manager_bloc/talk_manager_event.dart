@@ -10,3 +10,9 @@ class _UpdateChats extends TalkManagerEvent {
 
   _UpdateChats(this.chatList);
 }
+
+class AddChat extends TalkManagerEvent {
+  final String chatName;
+
+  AddChat(this.chatName);
+}

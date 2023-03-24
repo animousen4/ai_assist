@@ -30,6 +30,11 @@ class AddMessageEvent extends MessageEvent {
   AddMessageEvent(super.messages);
 }
 
+class _UpdateMessageEvent extends ChatEvent {
+  final List<ExtendedMessage> messages;
+  _UpdateMessageEvent(this.messages);
+}
+
 class _RecieveMessage extends MessageEvent {
   _RecieveMessage(super.messages);
 }

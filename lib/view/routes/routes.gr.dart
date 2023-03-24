@@ -26,13 +26,14 @@ class _$AppRouter extends RootStackRouter {
       );
     },
     ChatPageRoute.name: (routeData) {
-      final args = routeData.argsAs<ChatPageRouteArgs>();
+      final pathParams = routeData.inheritedPathParams;
+      final args = routeData.argsAs<ChatPageRouteArgs>(
+          orElse: () => ChatPageRouteArgs(chatId: pathParams.getInt('chatId')));
       return MaterialPageX<dynamic>(
         routeData: routeData,
         child: ChatPage(
           key: args.key,
-          isTemplate: args.isTemplate,
-          n: args.n,
+          chatId: args.chatId,
         ),
       );
     },
@@ -69,7 +70,7 @@ class _$AppRouter extends RootStackRouter {
         ),
         RouteConfig(
           ChatPageRoute.name,
-          path: '/chat/:n',
+          path: '/chat/:chatId',
         ),
       ];
 }
@@ -106,17 +107,15 @@ class HomeScreenRouteArgs {
 class ChatPageRoute extends PageRouteInfo<ChatPageRouteArgs> {
   ChatPageRoute({
     Key? key,
-    required bool isTemplate,
-    required int n,
+    required int chatId,
   }) : super(
           ChatPageRoute.name,
-          path: '/chat/:n',
+          path: '/chat/:chatId',
           args: ChatPageRouteArgs(
             key: key,
-            isTemplate: isTemplate,
-            n: n,
+            chatId: chatId,
           ),
-          rawPathParams: {'n': n},
+          rawPathParams: {'chatId': chatId},
         );
 
   static const String name = 'ChatPageRoute';
@@ -125,19 +124,16 @@ class ChatPageRoute extends PageRouteInfo<ChatPageRouteArgs> {
 class ChatPageRouteArgs {
   const ChatPageRouteArgs({
     this.key,
-    required this.isTemplate,
-    required this.n,
+    required this.chatId,
   });
 
   final Key? key;
 
-  final bool isTemplate;
-
-  final int n;
+  final int chatId;
 
   @override
   String toString() {
-    return 'ChatPageRouteArgs{key: $key, isTemplate: $isTemplate, n: $n}';
+    return 'ChatPageRouteArgs{key: $key, chatId: $chatId}';
   }
 }
 

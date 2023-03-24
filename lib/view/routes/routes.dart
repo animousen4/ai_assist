@@ -18,7 +18,7 @@ part 'routes.gr.dart';
       
     ]),  
 
-    AutoRoute(path: "/chat/:n", page: ChatPage),   
+    AutoRoute(path: "/chat/:chatId", page: ChatPage),   
     
   ],              
 )              

@@ -24,6 +24,7 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TalkManagerBloc, TalkManagerState>(
+      bloc: widget.managerBloc,
       builder: (context, state) {
         return ListView.builder(
           itemBuilder: (context2, index) {
@@ -34,11 +35,10 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
               ),
               onTap: () {
                 logger.i(context.router.current);
-                context.router.push(ChatPageRoute(
-                    n: index, isTemplate: widget.managerBloc.isTempl));
+                context.router.push(ChatPageRoute(chatId: state.chats[index].chatId));
                 //context.navigateTo();
               },
-              subtitle: Text("Nothing"),
+              subtitle: state.chats[index].messages.isEmpty ? Text("Empty") : Text(state.chats[index].messages.last.content)
             );
           },
           itemCount: state.chats.length,

@@ -4,8 +4,12 @@ import 'package:ai_assist/model/chat/extended_chat.dart';
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/view/logic/impl/addable.dart';
 import 'package:bloc/bloc.dart';
+import 'package:drift/drift.dart';
 import 'package:gpt_api/gpt_api.dart';
 import 'package:meta/meta.dart';
+import 'package:rxdart/rxdart.dart';
+
+import '../../../model/chat/extended_message.dart';
 
 part 'talk_manager_event.dart';
 part 'talk_manager_state.dart';
@@ -13,12 +17,52 @@ part 'talk_manager_state.dart';
 class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
   final bool isTempl;
   final AbstractMessageDatabase messageDatabase;
+  late final Stream<List<Message>> messageStream;
+  int get getChatType => isTempl ? 1 : 0;
   TalkManagerBloc({required this.isTempl, required this.messageDatabase})
       : super(TalkManagerState([])) {
-    messageDatabase.select(messageDatabase.messages).watch().listen((event) {
-      //add(_UpdateChats(event.map<ExtendedChat>(
-      //    (e) => ExtendedChat(name: "LO", messages: messages)).toList()));
+    //messageDatabase.select(messageDatabase.chats).where((tbl) => tbl.)
+
+    messageStream = (messageDatabase.select(messageDatabase.messages)
+          ..orderBy([
+            (u) => OrderingTerm(expression: u.data, mode: OrderingMode.desc)
+          ]))
+        .watch();
+
+    messageStream.listen(
+      (messageList) async {
+        Map<int, ExtendedChat> m = {};
+        for (var msg in messageList) {
+          Chat chat = await (messageDatabase.select(messageDatabase.chats)
+                ..where((tbl) => tbl.chatId.equals(msg.chatId))
+                ..where((tbl) => tbl.chatType.equals(getChatType)))
+              .getSingle();
+          m.putIfAbsent(msg.chatId, () => ExtendedChat.fromChat(chat, [msg]));
+        }
+        var chats = await (messageDatabase.select(messageDatabase.chats)
+              ..where((tbl) => tbl.chatType.equals(getChatType)))
+            .get();
+        for (var leftChat in chats) {
+          m.putIfAbsent(
+              leftChat.chatId, () => ExtendedChat.fromChat(leftChat, []));
+        }
+        add(_UpdateChats(m.values.toList()));
+      },
+    );
+
+    on<AddChat>((event, emit) async {
+      //messageDatabase.into(messageDatabase.messages).insert(MessagesCompanion.insert(chatId: chatId, data: data, role: role, content: content))
+
+      await messageDatabase.into(messageDatabase.chats).insert(
+          ChatsCompanion.insert(
+              chatType: getChatType,
+              chatName: event.chatName,
+              creationDate: DateTime.now()));
+
+    //messageStream.publish()
+      
     });
+
     on<TalkManagerEvent>((event, emit) {
       // TODO: implement event handler
     });
@@ -26,13 +70,6 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
     on<_UpdateChats>((event, emit) {
       emit(TalkManagerState(event.chatList));
     });
-    on<LoadChats>((event, emit) {
-      // EMIT SORTED CHATS
-      //final List<ExtendedChat> sortedChats = [];
-
-      // add stream and sub, listen upd
-      //sortedChats.add(ExtendedChat(name: "Chattt", messages: []));
-      emit(TalkManagerState([]));
-    });
+    on<LoadChats>((event, emit) {});
   }
 }
