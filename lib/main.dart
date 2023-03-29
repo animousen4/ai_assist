@@ -24,7 +24,6 @@ void main() async {
   final chatManager = ChatManager(ChatGptService.create(client(
       AuthorizationSericeV1(
           "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"))));
-  
 
   runApp(MyApp(
     appRouter: appRouter,
@@ -48,6 +47,7 @@ class MyApp extends StatelessWidget {
         Provider<ChatManager>.value(value: chatManager)
       ],
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         theme: AppThemeManager.dark,
         routerDelegate: appRouter.delegate(),
         routeInformationParser: appRouter.defaultRouteParser(),
@@ -55,5 +55,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

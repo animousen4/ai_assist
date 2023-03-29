@@ -34,8 +34,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
       },
     );
 
-    chatSub = (messageDatabase
-        .select(messageDatabase.chats)
+    chatSub = ((messageDatabase.select(messageDatabase.chats))
         .watch()
         .listen((chatList) async {
       add(_UpdateChats(await collectChats(await (messageDatabase
@@ -53,6 +52,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
           ChatsCompanion.insert(
               chatType: getChatType,
               chatName: event.chatName,
+              chatStatus: 0,
               creationDate: DateTime.now()));
 
       //messageStream.publish()
@@ -61,7 +61,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
     on<TalkManagerEvent>((event, emit) {
       // TODO: implement event handler
     });
-    
+
     on<_UpdateChats>((event, emit) {
       emit(TalkManagerState(event.chatList));
     });
@@ -73,15 +73,16 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
     for (var msg in messageList) {
       Chat? chat = await (messageDatabase.select(messageDatabase.chats)
             ..where((tbl) => tbl.chatId.equals(msg.chatId))
-            ..where((tbl) => tbl.chatType.equals(getChatType)))
+            ..where((tbl) => tbl.chatType.equals(getChatType))
+            ..where((tbl) => tbl.chatStatus.equals(0)))
           .getSingleOrNull();
       if (chat != null) {
         m.putIfAbsent(msg.chatId, () => ExtendedChat.fromChat(chat, [msg]));
       }
-      
     }
     var chats = await (messageDatabase.select(messageDatabase.chats)
-          ..where((tbl) => tbl.chatType.equals(getChatType)))
+          ..where((tbl) => tbl.chatType.equals(getChatType))
+          ..where((tbl) => tbl.chatStatus.equals(0)))
         .get();
     for (var leftChat in chats) {
       m.putIfAbsent(leftChat.chatId, () => ExtendedChat.fromChat(leftChat, []));

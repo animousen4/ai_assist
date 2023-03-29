@@ -6,7 +6,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 
+import '../../../../model/db/c/message_db.dart';
 import '../../../logic/chat_manager/chat_manager.dart';
+import '../../../logic/selection_bloc/selection_bloc.dart';
 import '../../../routes/routes.dart';
 
 class TalkChatsPage extends StatefulWidget {
@@ -19,65 +21,62 @@ class TalkChatsPage extends StatefulWidget {
 
 class _TalkChatsPageState extends State<TalkChatsPage> {
   late final List<PageRouteInfo> routes;
-  bool selectMode = false;
   final logger = Logger();
-  final List<int> selectedIndexes = [];
   late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TalkManagerBloc, TalkManagerState>(
       bloc: widget.managerBloc,
       builder: (context, state) {
-        return ListView.builder(
-          itemBuilder: (context2, index) {
-            return ListTile(
-                title: Text(state.chats[index].name),
-                //selectedTileColor: Colors.white.withOpacity(0.2),
-                selected: selectedIndexes.contains(index),
-                leading: CircleAvatar(
-                  backgroundColor: selectedIndexes.contains(index)
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.inversePrimary,
-                  child: Text("$index"),
-                ),
-                onTap: () {
-                  if (selectMode) {
-                    if (selectedIndexes.contains(index)) {
-                      setState(() {
-                        selectedIndexes.remove(index);
-                      });
-                    } else {
-                      setState(() {
-                        selectedIndexes.add(index);
-                      });
-                    }
-                  } else {
-                    logger.i(context.router.current);
-                    context.router
-                        .push(ChatPageRoute(chatId: state.chats[index].chatId));
-                  }
-                  //context.navigateTo();
-                },
-                onLongPress: () {
-                  if (!selectMode) {
-                    setState(() {
-                      selectedIndexes.add(index);
-                      selectMode = true;
-                    });
-                  } else {}
-                },
-                subtitle: state.chats[index].messages.isEmpty
-                    ? Text(
-                        "Empty",
-                        style: TextStyle(color: Colors.grey),
-                      )
-                    : Text(
-                        "${state.chats[index].messages.last.role}: ${state.chats[index].messages.last.content}",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ));
+        return BlocBuilder<SelectionBloc, SelectionState>(
+          builder: (context, selectionState) {
+            return ListView.builder(
+              itemBuilder: (context2, index) {
+                return ListTile(
+                    title: Text(state.chats[index].name),
+                    //selectedTileColor: Colors.white.withOpacity(0.2),
+                    selected: selectionState.selectedChatIds
+                        .contains(state.chats[index].chatId),
+                    leading: CircleAvatar(
+                      backgroundColor: selectionState.selectedChatIds
+                              .contains(state.chats[index].chatId)
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.inversePrimary,
+                      child: Text("$index"),
+                    ),
+                    onTap: () {
+                      if (selectionState.isSelectionMode) {
+                        context
+                            .read<SelectionBloc>()
+                            .add(SelectChat(state.chats[index].chatId));
+                      } else {
+                        logger.i(context.router.current);
+                        context.router.push(
+                            ChatPageRoute(chatId: state.chats[index].chatId));
+                      }
+                      //context.navigateTo();
+                    },
+                    onLongPress: () {
+                      if (!selectionState.isSelectionMode) {
+                        context
+                            .read<SelectionBloc>()
+                            .add(SelectChat(state.chats[index].chatId));
+                      }
+                    },
+                    subtitle: state.chats[index].messages.isEmpty
+                        ? Text(
+                            "Empty",
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        : Text(
+                            "${state.chats[index].messages.last.role}: ${state.chats[index].messages.last.content}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ));
+              },
+              itemCount: state.chats.length,
+            );
           },
-          itemCount: state.chats.length,
         );
       },
     );

@@ -17,6 +17,12 @@ class $ChatsTable extends Chats with TableInfo<$ChatsTable, Chat> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _chatStatusMeta =
+      const VerificationMeta('chatStatus');
+  @override
+  late final GeneratedColumn<int> chatStatus = GeneratedColumn<int>(
+      'chat_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _chatTypeMeta =
       const VerificationMeta('chatType');
   @override
@@ -43,7 +49,7 @@ class $ChatsTable extends Chats with TableInfo<$ChatsTable, Chat> {
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [chatId, chatType, chatName, creationDate, closeDate];
+      [chatId, chatStatus, chatType, chatName, creationDate, closeDate];
   @override
   String get aliasedName => _alias ?? 'chats';
   @override
@@ -56,6 +62,14 @@ class $ChatsTable extends Chats with TableInfo<$ChatsTable, Chat> {
     if (data.containsKey('chat_id')) {
       context.handle(_chatIdMeta,
           chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
+    }
+    if (data.containsKey('chat_status')) {
+      context.handle(
+          _chatStatusMeta,
+          chatStatus.isAcceptableOrUnknown(
+              data['chat_status']!, _chatStatusMeta));
+    } else if (isInserting) {
+      context.missing(_chatStatusMeta);
     }
     if (data.containsKey('chat_type')) {
       context.handle(_chatTypeMeta,
@@ -92,6 +106,8 @@ class $ChatsTable extends Chats with TableInfo<$ChatsTable, Chat> {
     return Chat(
       chatId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
+      chatStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}chat_status'])!,
       chatType: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}chat_type'])!,
       chatName: attachedDatabase.typeMapping
@@ -111,12 +127,14 @@ class $ChatsTable extends Chats with TableInfo<$ChatsTable, Chat> {
 
 class Chat extends DataClass implements Insertable<Chat> {
   final int chatId;
+  final int chatStatus;
   final int chatType;
   final String chatName;
   final DateTime creationDate;
   final DateTime? closeDate;
   const Chat(
       {required this.chatId,
+      required this.chatStatus,
       required this.chatType,
       required this.chatName,
       required this.creationDate,
@@ -125,6 +143,7 @@ class Chat extends DataClass implements Insertable<Chat> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['chat_id'] = Variable<int>(chatId);
+    map['chat_status'] = Variable<int>(chatStatus);
     map['chat_type'] = Variable<int>(chatType);
     map['chat_name'] = Variable<String>(chatName);
     map['creation_date'] = Variable<DateTime>(creationDate);
@@ -137,6 +156,7 @@ class Chat extends DataClass implements Insertable<Chat> {
   ChatsCompanion toCompanion(bool nullToAbsent) {
     return ChatsCompanion(
       chatId: Value(chatId),
+      chatStatus: Value(chatStatus),
       chatType: Value(chatType),
       chatName: Value(chatName),
       creationDate: Value(creationDate),
@@ -151,6 +171,7 @@ class Chat extends DataClass implements Insertable<Chat> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Chat(
       chatId: serializer.fromJson<int>(json['chatId']),
+      chatStatus: serializer.fromJson<int>(json['chatStatus']),
       chatType: serializer.fromJson<int>(json['chatType']),
       chatName: serializer.fromJson<String>(json['chatName']),
       creationDate: serializer.fromJson<DateTime>(json['creationDate']),
@@ -162,6 +183,7 @@ class Chat extends DataClass implements Insertable<Chat> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'chatId': serializer.toJson<int>(chatId),
+      'chatStatus': serializer.toJson<int>(chatStatus),
       'chatType': serializer.toJson<int>(chatType),
       'chatName': serializer.toJson<String>(chatName),
       'creationDate': serializer.toJson<DateTime>(creationDate),
@@ -171,12 +193,14 @@ class Chat extends DataClass implements Insertable<Chat> {
 
   Chat copyWith(
           {int? chatId,
+          int? chatStatus,
           int? chatType,
           String? chatName,
           DateTime? creationDate,
           Value<DateTime?> closeDate = const Value.absent()}) =>
       Chat(
         chatId: chatId ?? this.chatId,
+        chatStatus: chatStatus ?? this.chatStatus,
         chatType: chatType ?? this.chatType,
         chatName: chatName ?? this.chatName,
         creationDate: creationDate ?? this.creationDate,
@@ -186,6 +210,7 @@ class Chat extends DataClass implements Insertable<Chat> {
   String toString() {
     return (StringBuffer('Chat(')
           ..write('chatId: $chatId, ')
+          ..write('chatStatus: $chatStatus, ')
           ..write('chatType: $chatType, ')
           ..write('chatName: $chatName, ')
           ..write('creationDate: $creationDate, ')
@@ -195,13 +220,14 @@ class Chat extends DataClass implements Insertable<Chat> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(chatId, chatType, chatName, creationDate, closeDate);
+  int get hashCode => Object.hash(
+      chatId, chatStatus, chatType, chatName, creationDate, closeDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Chat &&
           other.chatId == this.chatId &&
+          other.chatStatus == this.chatStatus &&
           other.chatType == this.chatType &&
           other.chatName == this.chatName &&
           other.creationDate == this.creationDate &&
@@ -210,12 +236,14 @@ class Chat extends DataClass implements Insertable<Chat> {
 
 class ChatsCompanion extends UpdateCompanion<Chat> {
   final Value<int> chatId;
+  final Value<int> chatStatus;
   final Value<int> chatType;
   final Value<String> chatName;
   final Value<DateTime> creationDate;
   final Value<DateTime?> closeDate;
   const ChatsCompanion({
     this.chatId = const Value.absent(),
+    this.chatStatus = const Value.absent(),
     this.chatType = const Value.absent(),
     this.chatName = const Value.absent(),
     this.creationDate = const Value.absent(),
@@ -223,15 +251,18 @@ class ChatsCompanion extends UpdateCompanion<Chat> {
   });
   ChatsCompanion.insert({
     this.chatId = const Value.absent(),
+    required int chatStatus,
     required int chatType,
     required String chatName,
     required DateTime creationDate,
     this.closeDate = const Value.absent(),
-  })  : chatType = Value(chatType),
+  })  : chatStatus = Value(chatStatus),
+        chatType = Value(chatType),
         chatName = Value(chatName),
         creationDate = Value(creationDate);
   static Insertable<Chat> custom({
     Expression<int>? chatId,
+    Expression<int>? chatStatus,
     Expression<int>? chatType,
     Expression<String>? chatName,
     Expression<DateTime>? creationDate,
@@ -239,6 +270,7 @@ class ChatsCompanion extends UpdateCompanion<Chat> {
   }) {
     return RawValuesInsertable({
       if (chatId != null) 'chat_id': chatId,
+      if (chatStatus != null) 'chat_status': chatStatus,
       if (chatType != null) 'chat_type': chatType,
       if (chatName != null) 'chat_name': chatName,
       if (creationDate != null) 'creation_date': creationDate,
@@ -248,12 +280,14 @@ class ChatsCompanion extends UpdateCompanion<Chat> {
 
   ChatsCompanion copyWith(
       {Value<int>? chatId,
+      Value<int>? chatStatus,
       Value<int>? chatType,
       Value<String>? chatName,
       Value<DateTime>? creationDate,
       Value<DateTime?>? closeDate}) {
     return ChatsCompanion(
       chatId: chatId ?? this.chatId,
+      chatStatus: chatStatus ?? this.chatStatus,
       chatType: chatType ?? this.chatType,
       chatName: chatName ?? this.chatName,
       creationDate: creationDate ?? this.creationDate,
@@ -266,6 +300,9 @@ class ChatsCompanion extends UpdateCompanion<Chat> {
     final map = <String, Expression>{};
     if (chatId.present) {
       map['chat_id'] = Variable<int>(chatId.value);
+    }
+    if (chatStatus.present) {
+      map['chat_status'] = Variable<int>(chatStatus.value);
     }
     if (chatType.present) {
       map['chat_type'] = Variable<int>(chatType.value);
@@ -286,6 +323,7 @@ class ChatsCompanion extends UpdateCompanion<Chat> {
   String toString() {
     return (StringBuffer('ChatsCompanion(')
           ..write('chatId: $chatId, ')
+          ..write('chatStatus: $chatStatus, ')
           ..write('chatType: $chatType, ')
           ..write('chatName: $chatName, ')
           ..write('creationDate: $creationDate, ')

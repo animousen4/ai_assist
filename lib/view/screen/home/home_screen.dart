@@ -14,6 +14,7 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../../model/db/c/template_db.dart';
 import '../../logic/chat_bloc/chat_bloc.dart';
+import '../../logic/selection_bloc/selection_bloc.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -28,55 +29,139 @@ class _HomeScreenState extends State<HomeScreen> {
   late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
-    return AutoTabsRouter.tabBar(
-      routes: [
-        TalkChatsPageRoute(managerBloc: blocList[0]),
-        TalkChatsPageRoute(managerBloc: blocList[1])
-      ],
-      builder: (context, child, tabController) {
-        curBlocIndex = tabController.index;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text("Client"),
-            bottom: TabBar(
-              tabs: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text("Talks"),
+    return BlocProvider(
+      create: (context) =>
+          SelectionBloc(messageDatabase: context.read<MessageDatabase>()),
+      child: AutoTabsRouter.tabBar(
+        routes: [
+          TalkChatsPageRoute(managerBloc: blocList[0]),
+          TalkChatsPageRoute(managerBloc: blocList[1])
+        ],
+        builder: (context, child, tabController) {
+          curBlocIndex = tabController.index;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text("Client"),
+              bottom: TabBar(
+                tabs: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("Talks"),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text("Templates"),
+                  )
+                ],
+                controller: tabController,
+              ),
+              actions: [
+                BlocBuilder<SelectionBloc, SelectionState>(
+                  builder: (context, state) {
+                    if (state.isSelectionMode) {
+                      return IconButton(
+                          onPressed: () {
+                            context.read<SelectionBloc>().add(DeleteChats());
+                          },
+                          icon: Icon(Icons.delete));
+                    }
+                    return SizedBox();
+                  },
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text("Templates"),
+                BlocBuilder<SelectionBloc, SelectionState>(
+                  builder: (context, state) {
+                    if (state.isSelectionMode) {
+                      return IconButton(
+                          onPressed: () {
+                            context.read<SelectionBloc>().add(MakeCopy());
+                          },
+                          icon: Icon(Icons.copy_all));
+                    }
+                    return SizedBox();
+                  },
+                ),
+                BlocBuilder<SelectionBloc, SelectionState>(
+                  builder: (context, state) {
+                    if (state.isSelectionMode) {
+                      return PopupMenuButton(
+                          itemBuilder: (context) => [
+                                if (state.isSingleSelection)
+                                  PopupMenuItem(
+                                    child: Text("To templates"),
+                                    onTap: () {
+                                      context
+                                          .read<SelectionBloc>()
+                                          .add(MakeCopyToTemplates());
+                                    },
+                                  ),
+                                if (state.isSingleSelection)
+                                  PopupMenuItem(
+                                    child: Text("To talks"),
+                                    onTap: () {
+                                      context
+                                          .read<SelectionBloc>()
+                                          .add(MakeCopy());
+                                    },
+                                  ),
+                                if (state.isSingleSelection)
+                                  PopupMenuItem(
+                                    child: Text("Rename"),
+                                    onTap: () async {
+                                      String newName = "";
+                                      await showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                title: Text("New name"),
+                                                content: TextFormField(
+                                                  onChanged: (t) => newName = t,
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                      onPressed: () {
+                                                        context
+                                                            .read<
+                                                                SelectionBloc>()
+                                                            .add(Rename(
+                                                                newName));
+                                                      },
+                                                      child: Text("Ok"))
+                                                ],
+                                              ));
+                                    },
+                                  )
+                              ]);
+                    }
+                    return SizedBox();
+                  },
                 )
               ],
-              controller: tabController,
             ),
-          ),
-          body: child,
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              String text = "";
-              await showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                        title: Text("Write a name of chat"),
-                        content: TextFormField(
-                          onChanged: (t) => text = t,
-                        ),
-                        actions: [
-                          TextButton(
-                              onPressed: () {
-                                blocList[curBlocIndex].add(AddChat(text));
-                                context.popRoute();
-                              },
-                              child: Text("OK"))
-                        ],
-                      ));
-            },
-            child: Icon(Icons.add),
-          ),
-        );
-      },
+            body: child,
+            floatingActionButton: FloatingActionButton(
+              onPressed: () async {
+                String text = "";
+                await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                          title: Text("Write a name of chat"),
+                          content: TextFormField(
+                            onChanged: (t) => text = t,
+                          ),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  blocList[curBlocIndex].add(AddChat(text));
+                                  context.popRoute();
+                                },
+                                child: Text("OK"))
+                          ],
+                        ));
+              },
+              child: Icon(Icons.add),
+            ),
+          );
+        },
+      ),
     );
   }
 

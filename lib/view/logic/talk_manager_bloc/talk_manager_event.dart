@@ -16,3 +16,10 @@ class AddChat extends TalkManagerEvent {
 
   AddChat(this.chatName);
 }
+
+class ModifyChats extends TalkManagerEvent {
+  final List<int> chatIds;
+
+  ModifyChats(this.chatIds);
+}
+
