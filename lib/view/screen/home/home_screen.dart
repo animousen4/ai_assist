@@ -24,56 +24,79 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final logger = Logger();
-  late final TalkManagerBloc talkm;
-  late final TalkManagerBloc templ;
+  late final List<TalkManagerBloc> blocList;
+  late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: talkm,
-      child: AutoTabsRouter.tabBar(
-        routes: [
-          TalkChatsPageRoute(managerBloc: talkm),
-          TalkChatsPageRoute(managerBloc: templ)
-        ],
-        builder: (context, child, tabController) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text("Client"),
-              bottom: TabBar(
-                tabs: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text("Talks"),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text("Templates"),
-                  )
-                ],
-                controller: tabController,
-              ),
+    return AutoTabsRouter.tabBar(
+      routes: [
+        TalkChatsPageRoute(managerBloc: blocList[0]),
+        TalkChatsPageRoute(managerBloc: blocList[1])
+      ],
+      builder: (context, child, tabController) {
+        curBlocIndex = tabController.index;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text("Client"),
+            bottom: TabBar(
+              tabs: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text("Talks"),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text("Templates"),
+                )
+              ],
+              controller: tabController,
             ),
-            body: child,
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                talkm.add(AddChat("Old chat"));
-              },
-              child: Icon(Icons.add),
-            ),
-          );
-        },
-      ),
+          ),
+          body: child,
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              String text = "";
+              await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                        title: Text("Write a name of chat"),
+                        content: TextFormField(
+                          onChanged: (t) => text = t,
+                        ),
+                        actions: [
+                          TextButton(
+                              onPressed: () {
+                                blocList[curBlocIndex].add(AddChat(text));
+                                context.popRoute();
+                              },
+                              child: Text("OK"))
+                        ],
+                      ));
+            },
+            child: Icon(Icons.add),
+          ),
+        );
+      },
     );
   }
 
   @override
   void initState() {
-    talkm = TalkManagerBloc(
-        isTempl: false, messageDatabase: context.read<MessageDatabase>())
-      ..add(LoadChats());
-    templ = TalkManagerBloc(
-        isTempl: true, messageDatabase: context.read<MessageDatabase>())
-      ..add(LoadChats());
+    curBlocIndex = 0;
+    blocList = [
+      TalkManagerBloc(
+          isTempl: false, messageDatabase: context.read<MessageDatabase>())
+        ..add(LoadChats()),
+      TalkManagerBloc(
+          isTempl: true, messageDatabase: context.read<MessageDatabase>())
+        ..add(LoadChats())
+    ];
+    // talkm = TalkManagerBloc(
+    //     isTempl: false, messageDatabase: context.read<MessageDatabase>())
+    //   ..add(LoadChats());
+    // templ = TalkManagerBloc(
+    //     isTempl: true, messageDatabase: context.read<MessageDatabase>())
+    //   ..add(LoadChats());
     super.initState();
   }
 }

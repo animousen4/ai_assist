@@ -25,6 +25,7 @@ dependencies:
   chat_bubbles: ^1.4.1
   auto_route_generator: ^5.0.3
   sqflite: ^2.2.6
+  sqlite3_flutter_libs: ^0.5.13
   
 
 dev_dependencies:

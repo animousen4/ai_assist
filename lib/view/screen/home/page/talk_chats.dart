@@ -19,7 +19,9 @@ class TalkChatsPage extends StatefulWidget {
 
 class _TalkChatsPageState extends State<TalkChatsPage> {
   late final List<PageRouteInfo> routes;
+  bool selectMode = false;
   final logger = Logger();
+  final List<int> selectedIndexes = [];
   late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
@@ -29,17 +31,51 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
         return ListView.builder(
           itemBuilder: (context2, index) {
             return ListTile(
-              title: Text("${state.chats[index].name}"),
-              leading: CircleAvatar(
-                child: Text("$index"),
-              ),
-              onTap: () {
-                logger.i(context.router.current);
-                context.router.push(ChatPageRoute(chatId: state.chats[index].chatId));
-                //context.navigateTo();
-              },
-              subtitle: state.chats[index].messages.isEmpty ? Text("Empty") : Text(state.chats[index].messages.last.content)
-            );
+                title: Text(state.chats[index].name),
+                //selectedTileColor: Colors.white.withOpacity(0.2),
+                selected: selectedIndexes.contains(index),
+                leading: CircleAvatar(
+                  backgroundColor: selectedIndexes.contains(index)
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.inversePrimary,
+                  child: Text("$index"),
+                ),
+                onTap: () {
+                  if (selectMode) {
+                    if (selectedIndexes.contains(index)) {
+                      setState(() {
+                        selectedIndexes.remove(index);
+                      });
+                    } else {
+                      setState(() {
+                        selectedIndexes.add(index);
+                      });
+                    }
+                  } else {
+                    logger.i(context.router.current);
+                    context.router
+                        .push(ChatPageRoute(chatId: state.chats[index].chatId));
+                  }
+                  //context.navigateTo();
+                },
+                onLongPress: () {
+                  if (!selectMode) {
+                    setState(() {
+                      selectedIndexes.add(index);
+                      selectMode = true;
+                    });
+                  } else {}
+                },
+                subtitle: state.chats[index].messages.isEmpty
+                    ? Text(
+                        "Empty",
+                        style: TextStyle(color: Colors.grey),
+                      )
+                    : Text(
+                        "${state.chats[index].messages.last.role}: ${state.chats[index].messages.last.content}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ));
           },
           itemCount: state.chats.length,
         );

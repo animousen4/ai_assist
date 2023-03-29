@@ -14,8 +14,7 @@ import 'package:rxdart/rxdart.dart';
 import '../../logic/chat_bloc/chat_bloc.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage(
-      {super.key, @PathParam('chatId') required this.chatId});
+  const ChatPage({super.key, @PathParam('chatId') required this.chatId});
   final int chatId;
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -23,64 +22,81 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   late final TextEditingController textEditingController;
+  late final ScrollController _scrollController;
   ChatGptRole chatGptRole = ChatGptRole.user;
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ChatBloc(chatId: widget.chatId, messageDatabase: context.read<MessageDatabase>()),
+      create: (context) => ChatBloc(
+          chatId: widget.chatId,
+          messageDatabase: context.read<MessageDatabase>(),
+          chatGptService: context.read<ChatManager>().chatGptService),
       child: Builder(builder: (context) {
         return Scaffold(
           appBar: AppBar(
-            title: BlocBuilder<ChatBloc, ChatReady>(
+            title: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
-                return Text("${state.isTemplate ? "Template" : "Chat"}");
+                return state.extendedChat == null
+                    ? SizedBox()
+                    : Text("${state.extendedChat!.name} [${state.msgStatus}]");
               },
             ),
-          ) as PreferredSizeWidget,
-          body: ExtendedNestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) => [],
-            body: BlocListener<ChatBloc, ChatReady>(
-              listener: (context, state) {
-                if (state.chatStatus == ChatStatus.error) {
-                  showModalBottomSheet(
-                      context: context,
-                      builder: (context) => BottomSheet(
-                          onClosing: () {},
-                          builder: (c) => Text("An error occured!")));
+          ),
+          body: BlocListener<ChatBloc, ChatState>(
+              listener: (context, state) async {
+                if (state.error != null) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(
+                          SnackBar(content: Text("Error: ${state.error}")))
+                      .closed
+                      .then((value) =>
+                          context.read<ChatBloc>().add(ClearError()));
                 }
               },
-              child: BlocBuilder<ChatBloc, ChatReady>(
+              child: BlocBuilder<ChatBloc, ChatState>(
                 builder: (context, state) {
-                  if (state.messages.isEmpty) {
+                  if (state.extendedChat == null) {
                     return Center(
-                      child: state.isTemplate
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  if (state.extendedChat!.messages.isEmpty) {
+                    if (state.isTemplate == null) return SizedBox();
+                    return Center(
+                      child: state.isTemplate!
                           ? Text(
                               "Write a message with role to create template!")
                           : Text(
                               "No messages! Write anything to start up a dialog!"),
                     );
                   } else {
-                    final msgs = state.messages.reversed.toList();
+                    final msgs = state.extendedChat!.messages.reversed.toList();
                     return ListView.builder(
+                      controller: _scrollController,
                       reverse: true,
-                      itemBuilder: (context, index) => BubbleNormal(
-                        text: msgs[index].content,
-                        isSender: msgs[index].role == ChatGptRole.user,
+                      itemBuilder: (context, index) => Padding(
+                        padding: EdgeInsets.only(bottom: index == 0 ? 70 : 0),
+                        child: BubbleNormal(
+                          text: msgs[index].content,
+                          isSender: msgs[index].role == ChatGptRole.user,
+                        ),
                       ),
-                      itemCount: state.messages.length,
+                      itemCount: state.extendedChat!.messages.length,
                     );
                   }
                 },
               ),
             ),
-          ),
-          bottomNavigationBar: Padding(
+          bottomSheet: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                BlocBuilder<ChatBloc, ChatReady>(
+                BlocBuilder<ChatBloc, ChatState>(
                   builder: (context, state) {
-                    return state.isTemplate
+                    if (state.isTemplate == null) {
+                      return SizedBox();
+                    }
+                    return state.isTemplate!
                         ? SizedBox(
                             child: DropdownButtonFormField<ChatGptRole>(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -148,6 +164,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void initState() {
+    _scrollController = ScrollController();
     textEditingController = TextEditingController(text: "");
     super.initState();
   }

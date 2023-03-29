@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ai_assist/model/chat/extended_chat.dart';
 import 'package:ai_assist/model/chat/extended_message.dart';
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
@@ -12,66 +13,83 @@ import 'package:rxdart/rxdart.dart';
 part 'chat_event.dart';
 part 'chat_state.dart';
 
-class ChatBloc extends Bloc<ChatEvent, ChatReady> {
+class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final int chatId;
+  final ChatGptService? chatGptService;
   final logger = Logger();
   late final StreamSubscription<List<Message>> messageSub;
+  late final ChatGPT chatGPT;
   final MessageDatabase messageDatabase;
-  ChatBloc({
-    required this.chatId,
-    required this.messageDatabase,
-  }) : super(ChatReady(
-            messages: [], chatStatus: ChatStatus.ok, isTemplate: false)) {
+  ChatBloc(
+      {required this.chatId,
+      required this.messageDatabase,
+      required this.chatGptService})
+      : super(ChatState(extendedChat: null, isTemplate: null)) {
+    chatGPT = ChatGPT(chatGptService: chatGptService);
     messageSub = (messageDatabase.select(messageDatabase.messages)
           ..where((tbl) => tbl.chatId.equals(chatId)))
         .watch()
         .listen((event) {
       add(_UpdateMessageEvent(event
-          .map<ExtendedMessage>((e) => ExtendedMessage(
-              date: e.data,
-              content: e.content,
-              role: ChatGptRole.valueOf(e.role)))
+          .map<ExtendedMessage>((e) => ExtendedMessage.fromMessage(e))
           .toList()));
     });
-    on<AddMessageEvent>((event, emit) {
+    on<AddMessageEvent>((event, emit) async {
       for (var msg in event.messages) {
-        messageDatabase.into(messageDatabase.messages).insert(
+        await messageDatabase.into(messageDatabase.messages).insert(
             MessagesCompanion.insert(
                 chatId: chatId,
                 data: DateTime.now(),
                 role: msg.role.name,
                 content: msg.content));
       }
+
+      if ((await (messageDatabase.select(messageDatabase.chats)
+                    ..where((tbl) => tbl.chatId.equals(chatId)))
+                  .getSingle())
+              .chatType ==
+          0) {
+        emit(state.copyWith(msgStatus: MsgStatus.sending));
+        final response = await chatGPT.sendUnsavedMessages(
+            (await (messageDatabase.select(messageDatabase.messages)
+                      ..where((tbl) => tbl.chatId.equals(chatId)))
+                    .get())
+                .map<ExtendedMessage>((e) => ExtendedMessage.fromMessage(e))
+                .toList());
+        for (var msg in response) {
+          await messageDatabase.into(messageDatabase.messages).insert(
+              MessagesCompanion.insert(
+                  chatId: chatId,
+                  data: DateTime.now(),
+                  role: msg.role.name,
+                  content: msg.content));
+        }
+        emit(state.copyWith(msgStatus: MsgStatus.ok));
+      }
     });
 
-    on<_UpdateMessageEvent>((event, emit) {
-      emit(state.copyWith(messages: event.messages));
+    on<_ReceiveError>((event, emit) {
+      emit(state.copyWith(error: () => event.error.toString()));
     });
-    // extendedMessages = [];
-    // on<AddMessageEvent>((event, emit) async {
-    //   extendedMessages.add(ExtendedMessage(
-    //       date: DateTime.now(),
-    //       content: event.messages.first.content,
-    //       role: event.messages.first.role));
-    //   emit(ChatReady(
-    //       messages: extendedMessages,
-    //       chatStatus: ChatStatus.processing,
-    //       isTemplate: isTemplate));
-
-    //   await chatGPT?.sendUnsavedMessages(extendedMessages);
-    //   emit(ChatReady(
-    //       messages: extendedMessages,
-    //       chatStatus: ChatStatus.ok,
-    //       isTemplate: isTemplate));
-    // });
-
-    // on<_ReceiveError>((event, emit) {
-    //   emit(ChatReady(
-    //       messages: extendedMessages,
-    //       chatStatus: ChatStatus.error,
-    //       isTemplate: isTemplate));
-    // });
-    // on<_RecieveMessage>((event, emit) {});
+    on<ClearError>((event, emit) {
+      emit(state.copyWith(error: () => null));
+    });
+    on<_InitTemplateStatus>((event, emit) {});
+    on<_UpdateMessageEvent>((event, emit) async {
+      final chat = (await (messageDatabase.select(messageDatabase.chats)
+            ..where((tbl) => tbl.chatId.equals(chatId)))
+          .getSingle());
+      emit(
+        state.copyWith(
+            isTemplate: chat.chatType == 1,
+            extendedChat: ExtendedChat(
+                chatId: chatId,
+                name: chat
+                    .chatName,
+                messages: event.messages),
+            msgStatus: MsgStatus.ok),
+      );
+    });
   }
 
   @override

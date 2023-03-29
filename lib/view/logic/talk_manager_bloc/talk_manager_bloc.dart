@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:ai_assist/model/chat/extended_chat.dart';
@@ -17,21 +18,33 @@ part 'talk_manager_state.dart';
 class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
   final bool isTempl;
   final AbstractMessageDatabase messageDatabase;
-  late final Stream<List<Message>> messageStream;
+  late final StreamSubscription<List<Message>> messageSub;
+  late final StreamSubscription<List<Chat>> chatSub;
   int get getChatType => isTempl ? 1 : 0;
   TalkManagerBloc({required this.isTempl, required this.messageDatabase})
       : super(TalkManagerState([])) {
-    messageStream = (messageDatabase.select(messageDatabase.messages)
+    messageSub = (messageDatabase.select(messageDatabase.messages)
           ..orderBy([
             (u) => OrderingTerm(expression: u.data, mode: OrderingMode.desc)
           ]))
-        .watch();
-
-    messageStream.listen(
+        .watch()
+        .listen(
       (messageList) async {
         add(_UpdateChats(await collectChats(messageList)));
       },
     );
+
+    chatSub = (messageDatabase
+        .select(messageDatabase.chats)
+        .watch()
+        .listen((chatList) async {
+      add(_UpdateChats(await collectChats(await (messageDatabase
+              .select(messageDatabase.messages)
+            ..orderBy([
+              (u) => OrderingTerm(expression: u.data, mode: OrderingMode.desc)
+            ]))
+          .get())));
+    }));
 
     on<AddChat>((event, emit) async {
       //messageDatabase.into(messageDatabase.messages).insert(MessagesCompanion.insert(chatId: chatId, data: data, role: role, content: content))
@@ -48,7 +61,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
     on<TalkManagerEvent>((event, emit) {
       // TODO: implement event handler
     });
-
+    
     on<_UpdateChats>((event, emit) {
       emit(TalkManagerState(event.chatList));
     });
@@ -58,11 +71,14 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
   Future<List<ExtendedChat>> collectChats(List<Message> messageList) async {
     Map<int, ExtendedChat> m = {};
     for (var msg in messageList) {
-      Chat chat = await (messageDatabase.select(messageDatabase.chats)
+      Chat? chat = await (messageDatabase.select(messageDatabase.chats)
             ..where((tbl) => tbl.chatId.equals(msg.chatId))
             ..where((tbl) => tbl.chatType.equals(getChatType)))
-          .getSingle();
-      m.putIfAbsent(msg.chatId, () => ExtendedChat.fromChat(chat, [msg]));
+          .getSingleOrNull();
+      if (chat != null) {
+        m.putIfAbsent(msg.chatId, () => ExtendedChat.fromChat(chat, [msg]));
+      }
+      
     }
     var chats = await (messageDatabase.select(messageDatabase.chats)
           ..where((tbl) => tbl.chatType.equals(getChatType)))
@@ -72,5 +88,11 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
     }
 
     return m.values.toList();
+  }
+
+  @override
+  Future<void> close() {
+    messageSub.cancel();
+    return super.close();
   }
 }

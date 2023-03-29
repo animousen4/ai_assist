@@ -26,14 +26,24 @@ class _ReceiveError extends ChatEvent {
   _ReceiveError(this.error);
 }
 
+class ClearError extends ChatEvent {
+  
+}
+
 class AddMessageEvent extends MessageEvent {
   AddMessageEvent(super.messages);
+}
+
+class SendMessageEvent extends MessageEvent {
+  SendMessageEvent(super.messages);
 }
 
 class _UpdateMessageEvent extends ChatEvent {
   final List<ExtendedMessage> messages;
   _UpdateMessageEvent(this.messages);
 }
+
+class _InitTemplateStatus extends ChatEvent {}
 
 class _RecieveMessage extends MessageEvent {
   _RecieveMessage(super.messages);
