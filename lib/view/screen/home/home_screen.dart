@@ -59,75 +59,95 @@ class _HomeScreenState extends State<HomeScreen> {
                 BlocBuilder<SelectionBloc, SelectionState>(
                   builder: (context, state) {
                     if (state.isSelectionMode) {
-                      return IconButton(
-                          onPressed: () {
-                            context.read<SelectionBloc>().add(DeleteChats());
+                      return PopupMenuButton<String>(
+                          onSelected: (value) async {
+                            switch (value) {
+                              case "toTempl":
+                                context
+                                    .read<SelectionBloc>()
+                                    .add(MakeCopyToTemplates());
+                                break;
+                      
+                              case "toTalk":
+                                context.read<SelectionBloc>().add(MakeCopy());
+                                break;
+                      
+                              case "rename":
+                                String newName = "";
+                                await showDialog(
+                                    context: context,
+                                    builder: (contextt) => AlertDialog(
+                                          title: Text("New name"),
+                                          content: TextFormField(
+                                            onChanged: (t) => newName = t,
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                                onPressed: () {
+                                                  context
+                                                      .read<SelectionBloc>()
+                                                      .add(Rename(newName));
+                                                  context.popRoute();
+                                                },
+                                                child: Text("Ok"))
+                                          ],
+                                        ));
+                                break;
+                      
+                              case "delete":
+                                context
+                                    .read<SelectionBloc>()
+                                    .add(DeleteChats());
+                                break;
+                            }
                           },
-                          icon: Icon(Icons.delete));
-                    }
-                    return SizedBox();
-                  },
-                ),
-                BlocBuilder<SelectionBloc, SelectionState>(
-                  builder: (context, state) {
-                    if (state.isSelectionMode) {
-                      return IconButton(
-                          onPressed: () {
-                            context.read<SelectionBloc>().add(MakeCopy());
-                          },
-                          icon: Icon(Icons.copy_all));
-                    }
-                    return SizedBox();
-                  },
-                ),
-                BlocBuilder<SelectionBloc, SelectionState>(
-                  builder: (context, state) {
-                    if (state.isSelectionMode) {
-                      return PopupMenuButton(
                           itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete_outline),
+                                      SizedBox(width: 10),
+                                      Text("Delete")
+                                    ],
+                                  ),
+                                  value: "delete",
+                                ),
                                 if (state.isSingleSelection)
                                   PopupMenuItem(
-                                    child: Text("To templates"),
-                                    onTap: () {
-                                      context
-                                          .read<SelectionBloc>()
-                                          .add(MakeCopyToTemplates());
-                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.save_outlined),
+                                        SizedBox(width: 10),
+                                        Text("To templates")
+                                      ],
+                                    ),
+                                    value: "toTempl",
                                   ),
                                 if (state.isSingleSelection)
                                   PopupMenuItem(
-                                    child: Text("To talks"),
-                                    onTap: () {
-                                      context
-                                          .read<SelectionBloc>()
-                                          .add(MakeCopy());
-                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.chat_outlined,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Text("To talks")
+                                      ],
+                                    ),
+                                    value: "toTalk",
                                   ),
                                 if (state.isSingleSelection)
                                   PopupMenuItem(
-                                    child: Text("Rename"),
-                                    onTap: () async {
-                                      String newName = "";
-                                      await showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                                title: Text("New name"),
-                                                content: TextFormField(
-                                                  onChanged: (t) => newName = t,
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                      onPressed: () {
-                                                        context
-                                                            .read<
-                                                                SelectionBloc>()
-                                                            .add(Rename(
-                                                                newName));
-                                                      },
-                                                      child: Text("Ok"))
-                                                ],
-                                              ));
-                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit_outlined,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Text("Rename")
+                                      ],
+                                    ),
+                                    value: "rename",
                                   )
                               ]);
                     }

@@ -5,10 +5,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gpt_api/gpt_api.dart';
+import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../../logic/chat_bloc/chat_bloc.dart';
@@ -43,50 +45,56 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           body: BlocListener<ChatBloc, ChatState>(
-              listener: (context, state) async {
-                if (state.error != null) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(
-                          SnackBar(content: Text("Error: ${state.error}")))
-                      .closed
-                      .then((value) =>
-                          context.read<ChatBloc>().add(ClearError()));
+            listener: (context, state) async {
+              if (state.error != null) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(
+                        SnackBar(content: Text("Error: ${state.error}")))
+                    .closed
+                    .then(
+                        (value) => context.read<ChatBloc>().add(ClearError()));
+              }
+            },
+            child: BlocBuilder<ChatBloc, ChatState>(
+              builder: (context, state) {
+                if (state.extendedChat == null) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (state.extendedChat!.messages.isEmpty) {
+                  if (state.isTemplate == null) return SizedBox();
+                  return Center(
+                    child: state.isTemplate!
+                        ? Text("Write a message with role to create template!")
+                        : Text(
+                            "No messages! Write anything to start up a dialog!"),
+                  );
+                } else {
+                  final msgs = state.extendedChat!.messages.reversed.toList();
+                  return ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: index == 0 ? 70 : 0),
+                        child: GestureDetector(
+                          onLongPress: () {
+                            Logger().d("long press message with date:${msgs[index].date}");
+                          },
+                          child: BubbleNormal(
+                            text: msgs[index].content,
+                            isSender: msgs[index].role == ChatGptRole.user,
+                          ),
+                        ),
+                      );
+                    },
+                    itemCount: state.extendedChat!.messages.length,
+                  );
                 }
               },
-              child: BlocBuilder<ChatBloc, ChatState>(
-                builder: (context, state) {
-                  if (state.extendedChat == null) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  if (state.extendedChat!.messages.isEmpty) {
-                    if (state.isTemplate == null) return SizedBox();
-                    return Center(
-                      child: state.isTemplate!
-                          ? Text(
-                              "Write a message with role to create template!")
-                          : Text(
-                              "No messages! Write anything to start up a dialog!"),
-                    );
-                  } else {
-                    final msgs = state.extendedChat!.messages.reversed.toList();
-                    return ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      itemBuilder: (context, index) => Padding(
-                        padding: EdgeInsets.only(bottom: index == 0 ? 70 : 0),
-                        child: BubbleNormal(
-                          text: msgs[index].content,
-                          isSender: msgs[index].role == ChatGptRole.user,
-                        ),
-                      ),
-                      itemCount: state.extendedChat!.messages.length,
-                    );
-                  }
-                },
-              ),
             ),
+          ),
           bottomSheet: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -133,7 +141,8 @@ class _ChatPageState extends State<ChatPage> {
                     child: TextFormField(
                       maxLines: null,
                       controller: textEditingController,
-                      onFieldSubmitted: (v) => _submitMessage(context),
+                      //onFieldSubmitted: (v) => _submitMessage(context),
+                      autofocus: true,
                       decoration: InputDecoration(
                         suffixIcon: IconButton(
                             onPressed: () {
@@ -157,6 +166,7 @@ class _ChatPageState extends State<ChatPage> {
     context.read<ChatBloc>().add(AddMessageEvent([
           MessageAdapter(content: textEditingController.text, role: chatGptRole)
         ]));
+
     setState(() {
       textEditingController.text = "";
     });
