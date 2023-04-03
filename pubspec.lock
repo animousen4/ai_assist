@@ -358,9 +358,11 @@ packages:
   gpt_api:
     dependency: "direct main"
     description:
-      path: "../gpt_api"
-      relative: true
-    source: path
+      path: "."
+      ref: master
+      resolved-ref: "2a607d9c0a99174077a323262546c8193cded987"
+      url: "https://github.com/animousen4/gpt_api.git"
+    source: git
     version: "1.0.0"
   graphs:
     dependency: transitive

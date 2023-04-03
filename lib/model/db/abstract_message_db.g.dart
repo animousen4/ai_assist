@@ -347,6 +347,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _messageStatusMeta =
+      const VerificationMeta('messageStatus');
+  @override
+  late final GeneratedColumn<int> messageStatus = GeneratedColumn<int>(
+      'message_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _chatIdMeta = const VerificationMeta('chatId');
   @override
   late final GeneratedColumn<int> chatId = GeneratedColumn<int>(
@@ -372,7 +378,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       'content', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [id, chatId, data, role, content];
+  List<GeneratedColumn> get $columns =>
+      [id, messageStatus, chatId, data, role, content];
   @override
   String get aliasedName => _alias ?? 'messages';
   @override
@@ -384,6 +391,14 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('message_status')) {
+      context.handle(
+          _messageStatusMeta,
+          messageStatus.isAcceptableOrUnknown(
+              data['message_status']!, _messageStatusMeta));
+    } else if (isInserting) {
+      context.missing(_messageStatusMeta);
     }
     if (data.containsKey('chat_id')) {
       context.handle(_chatIdMeta,
@@ -420,6 +435,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     return Message(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      messageStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}message_status'])!,
       chatId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}chat_id'])!,
       data: attachedDatabase.typeMapping
@@ -439,12 +456,14 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
 
 class Message extends DataClass implements Insertable<Message> {
   final int id;
+  final int messageStatus;
   final int chatId;
   final DateTime data;
   final String role;
   final String content;
   const Message(
       {required this.id,
+      required this.messageStatus,
       required this.chatId,
       required this.data,
       required this.role,
@@ -453,6 +472,7 @@ class Message extends DataClass implements Insertable<Message> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['message_status'] = Variable<int>(messageStatus);
     map['chat_id'] = Variable<int>(chatId);
     map['data'] = Variable<DateTime>(data);
     map['role'] = Variable<String>(role);
@@ -463,6 +483,7 @@ class Message extends DataClass implements Insertable<Message> {
   MessagesCompanion toCompanion(bool nullToAbsent) {
     return MessagesCompanion(
       id: Value(id),
+      messageStatus: Value(messageStatus),
       chatId: Value(chatId),
       data: Value(data),
       role: Value(role),
@@ -475,6 +496,7 @@ class Message extends DataClass implements Insertable<Message> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Message(
       id: serializer.fromJson<int>(json['id']),
+      messageStatus: serializer.fromJson<int>(json['messageStatus']),
       chatId: serializer.fromJson<int>(json['chatId']),
       data: serializer.fromJson<DateTime>(json['data']),
       role: serializer.fromJson<String>(json['role']),
@@ -486,6 +508,7 @@ class Message extends DataClass implements Insertable<Message> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'messageStatus': serializer.toJson<int>(messageStatus),
       'chatId': serializer.toJson<int>(chatId),
       'data': serializer.toJson<DateTime>(data),
       'role': serializer.toJson<String>(role),
@@ -495,12 +518,14 @@ class Message extends DataClass implements Insertable<Message> {
 
   Message copyWith(
           {int? id,
+          int? messageStatus,
           int? chatId,
           DateTime? data,
           String? role,
           String? content}) =>
       Message(
         id: id ?? this.id,
+        messageStatus: messageStatus ?? this.messageStatus,
         chatId: chatId ?? this.chatId,
         data: data ?? this.data,
         role: role ?? this.role,
@@ -510,6 +535,7 @@ class Message extends DataClass implements Insertable<Message> {
   String toString() {
     return (StringBuffer('Message(')
           ..write('id: $id, ')
+          ..write('messageStatus: $messageStatus, ')
           ..write('chatId: $chatId, ')
           ..write('data: $data, ')
           ..write('role: $role, ')
@@ -519,12 +545,14 @@ class Message extends DataClass implements Insertable<Message> {
   }
 
   @override
-  int get hashCode => Object.hash(id, chatId, data, role, content);
+  int get hashCode =>
+      Object.hash(id, messageStatus, chatId, data, role, content);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Message &&
           other.id == this.id &&
+          other.messageStatus == this.messageStatus &&
           other.chatId == this.chatId &&
           other.data == this.data &&
           other.role == this.role &&
@@ -533,12 +561,14 @@ class Message extends DataClass implements Insertable<Message> {
 
 class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<int> id;
+  final Value<int> messageStatus;
   final Value<int> chatId;
   final Value<DateTime> data;
   final Value<String> role;
   final Value<String> content;
   const MessagesCompanion({
     this.id = const Value.absent(),
+    this.messageStatus = const Value.absent(),
     this.chatId = const Value.absent(),
     this.data = const Value.absent(),
     this.role = const Value.absent(),
@@ -546,16 +576,19 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   });
   MessagesCompanion.insert({
     this.id = const Value.absent(),
+    required int messageStatus,
     required int chatId,
     required DateTime data,
     required String role,
     required String content,
-  })  : chatId = Value(chatId),
+  })  : messageStatus = Value(messageStatus),
+        chatId = Value(chatId),
         data = Value(data),
         role = Value(role),
         content = Value(content);
   static Insertable<Message> custom({
     Expression<int>? id,
+    Expression<int>? messageStatus,
     Expression<int>? chatId,
     Expression<DateTime>? data,
     Expression<String>? role,
@@ -563,6 +596,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (messageStatus != null) 'message_status': messageStatus,
       if (chatId != null) 'chat_id': chatId,
       if (data != null) 'data': data,
       if (role != null) 'role': role,
@@ -572,12 +606,14 @@ class MessagesCompanion extends UpdateCompanion<Message> {
 
   MessagesCompanion copyWith(
       {Value<int>? id,
+      Value<int>? messageStatus,
       Value<int>? chatId,
       Value<DateTime>? data,
       Value<String>? role,
       Value<String>? content}) {
     return MessagesCompanion(
       id: id ?? this.id,
+      messageStatus: messageStatus ?? this.messageStatus,
       chatId: chatId ?? this.chatId,
       data: data ?? this.data,
       role: role ?? this.role,
@@ -590,6 +626,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (messageStatus.present) {
+      map['message_status'] = Variable<int>(messageStatus.value);
     }
     if (chatId.present) {
       map['chat_id'] = Variable<int>(chatId.value);
@@ -610,6 +649,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   String toString() {
     return (StringBuffer('MessagesCompanion(')
           ..write('id: $id, ')
+          ..write('messageStatus: $messageStatus, ')
           ..write('chatId: $chatId, ')
           ..write('data: $data, ')
           ..write('role: $role, ')

@@ -39,7 +39,7 @@ class SendMessageEvent extends MessageEvent {
 }
 
 class _UpdateMessageEvent extends ChatEvent {
-  final List<ExtendedMessage> messages;
+  final List<Message> messages;
   _UpdateMessageEvent(this.messages);
 }
 

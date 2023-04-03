@@ -5,14 +5,11 @@ import 'package:gpt_api/gpt_api.dart';
 class ExtendedChat {
   final String name;
   final int chatId;
-  final List<ExtendedMessage> messages;
+  final List<Message> messages;
 
   factory ExtendedChat.fromChat(Chat chat, List<Message> messages) =>
       ExtendedChat(
-          chatId: chat.chatId, name: chat.chatName, messages: messages.map<ExtendedMessage>((e) => ExtendedMessage(
-                            date: e.data,
-                            content: e.content,
-                            role: ChatGptRole.valueOf(e.role))).toList());
+          chatId: chat.chatId, name: chat.chatName, messages: messages);
   ExtendedChat(
       {required this.chatId, required this.name, required this.messages});
 }

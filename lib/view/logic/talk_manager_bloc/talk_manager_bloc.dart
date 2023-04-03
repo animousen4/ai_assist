@@ -24,6 +24,7 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
   TalkManagerBloc({required this.isTempl, required this.messageDatabase})
       : super(TalkManagerState([])) {
     messageSub = (messageDatabase.select(messageDatabase.messages)
+          ..where((tbl) => tbl.messageStatus.equals(0))
           ..orderBy([
             (u) => OrderingTerm(expression: u.data, mode: OrderingMode.desc)
           ]))
@@ -41,7 +42,10 @@ class TalkManagerBloc extends Bloc<TalkManagerEvent, TalkManagerState> {
               .select(messageDatabase.messages)
             ..orderBy([
               (u) => OrderingTerm(expression: u.data, mode: OrderingMode.desc)
-            ]))
+            ])
+            ..where((tbl) => tbl.messageStatus.equals(0))
+            )
+            
           .get())));
     }));
 

@@ -23,7 +23,7 @@ void main() async {
   final appRouter = AppRouter();
   final chatManager = ChatManager(ChatGptService.create(client(
       AuthorizationSericeV1(
-          "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"))));
+          "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"))));
 
   runApp(MyApp(
     appRouter: appRouter,

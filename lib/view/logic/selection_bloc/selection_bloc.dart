@@ -51,6 +51,7 @@ class SelectionBloc extends Bloc<SelectionEvent, SelectionState> {
         for (var oldMsg in oldMessages) {
           await messageDatabase.into(messageDatabase.messages).insert(
               MessagesCompanion.insert(
+                  messageStatus: 0,
                   chatId: newChatId,
                   data: oldMsg.data,
                   role: oldMsg.role,

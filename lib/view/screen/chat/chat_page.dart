@@ -14,6 +14,7 @@ import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../../logic/chat_bloc/chat_bloc.dart';
+import '../../logic/selection_chat_bloc/selection_chat_bloc.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key, @PathParam('chatId') required this.chatId});
@@ -28,11 +29,19 @@ class _ChatPageState extends State<ChatPage> {
   ChatGptRole chatGptRole = ChatGptRole.user;
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ChatBloc(
-          chatId: widget.chatId,
-          messageDatabase: context.read<MessageDatabase>(),
-          chatGptService: context.read<ChatManager>().chatGptService),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => ChatBloc(
+              chatId: widget.chatId,
+              messageDatabase: context.read<MessageDatabase>(),
+              chatGptService: context.read<ChatManager>().chatGptService),
+        ),
+        BlocProvider(
+          create: (context) => SelectionChatBloc(
+              messageDatabase: context.read<MessageDatabase>()),
+        ),
+      ],
       child: Builder(builder: (context) {
         return Scaffold(
           appBar: AppBar(
@@ -43,6 +52,30 @@ class _ChatPageState extends State<ChatPage> {
                     : Text("${state.extendedChat!.name} [${state.msgStatus}]");
               },
             ),
+            actions: [
+              BlocBuilder<SelectionChatBloc, SelectionChatState>(
+                builder: (context, state) {
+                  if (state.isSelectionMode) {
+                    return PopupMenuButton<String>(
+                        onSelected: (value) {
+                          var b = context.read<SelectionChatBloc>();
+                          switch (value) {
+                            case "delete":
+                              b.add(DeleteSelectedMessages());
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                              PopupMenuItem(
+                                child: Text("Delete"),
+                                value: "delete",
+                              )
+                            ]);
+                  }
+                  return SizedBox();
+                },
+              )
+            ],
           ),
           body: BlocListener<ChatBloc, ChatState>(
             listener: (context, state) async {
@@ -76,17 +109,40 @@ class _ChatPageState extends State<ChatPage> {
                     controller: _scrollController,
                     reverse: true,
                     itemBuilder: (context, index) {
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: index == 0 ? 70 : 0),
-                        child: GestureDetector(
-                          onLongPress: () {
-                            Logger().d("long press message with date:${msgs[index].date}");
-                          },
-                          child: BubbleNormal(
-                            text: msgs[index].content,
-                            isSender: msgs[index].role == ChatGptRole.user,
-                          ),
-                        ),
+                      return BlocBuilder<SelectionChatBloc, SelectionChatState>(
+                        builder: (context, selectionState) {
+                          return Container(
+                            color: selectionState.selectedMessagesId
+                                    .contains(msgs[index].id)
+                                ? Colors.white.withOpacity(0.3)
+                                : Colors.transparent,
+                            child: Padding(
+                              padding:
+                                  EdgeInsets.only(bottom: index == 0 ? 70 : 0),
+                              child: GestureDetector(
+                                onLongPress: () {
+                                  context
+                                      .read<SelectionChatBloc>()
+                                      .add(SelectMessage(msgs[index].id));
+                                  Logger().d(
+                                      "long press message with chatId:${msgs[index].chatId}");
+                                },
+                                onTap: () {
+                                  if (selectionState.isSelectionMode) {
+                                    context
+                                        .read<SelectionChatBloc>()
+                                        .add(SelectMessage(msgs[index].id));
+                                  } else {}
+                                },
+                                child: BubbleNormal(
+                                  text: msgs[index].content,
+                                  isSender:
+                                      msgs[index].role == ChatGptRole.user.name,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                     itemCount: state.extendedChat!.messages.length,
@@ -138,18 +194,28 @@ class _ChatPageState extends State<ChatPage> {
                   flex: 1,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxHeight: 100),
-                    child: TextFormField(
-                      maxLines: null,
-                      controller: textEditingController,
-                      //onFieldSubmitted: (v) => _submitMessage(context),
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        suffixIcon: IconButton(
-                            onPressed: () {
-                              _submitMessage(context);
-                            },
-                            icon: Icon(Icons.send)),
-                      ),
+                    child: BlocBuilder<SelectionChatBloc, SelectionChatState>(
+                      builder: (context, selectionState) {
+                        return TextFormField(
+                          maxLines: null,
+                          controller: textEditingController,
+                          //onFieldSubmitted: (v) => _submitMessage(context),
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            suffixIcon: IconButton(
+                                onPressed: () {
+                                  if (selectionState.isModificationMode) {
+                                    // PROCEESS
+                                    //context.read<SelectionChatBloc>();
+
+                                  } else {
+                                    _submitMessage(context);
+                                  }
+                                },
+                                icon: Icon(Icons.send)),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

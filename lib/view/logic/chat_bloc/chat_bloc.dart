@@ -27,17 +27,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       : super(ChatState(extendedChat: null, isTemplate: null)) {
     chatGPT = ChatGPT(chatGptService: chatGptService);
     messageSub = (messageDatabase.select(messageDatabase.messages)
-          ..where((tbl) => tbl.chatId.equals(chatId)))
+          ..where((tbl) => tbl.chatId.equals(chatId))..where((tbl) => tbl.messageStatus.equals(0)))
         .watch()
         .listen((event) {
-      add(_UpdateMessageEvent(event
-          .map<ExtendedMessage>((e) => ExtendedMessage.fromMessage(e))
-          .toList()));
+      add(_UpdateMessageEvent(event));
     });
     on<AddMessageEvent>((event, emit) async {
       for (var msg in event.messages) {
         await messageDatabase.into(messageDatabase.messages).insert(
             MessagesCompanion.insert(
+                messageStatus: 0,
                 chatId: chatId,
                 data: DateTime.now(),
                 role: msg.role.name,
@@ -52,6 +51,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         emit(state.copyWith(msgStatus: MsgStatus.sending));
         final response = await chatGPT.sendUnsavedMessages(
             (await (messageDatabase.select(messageDatabase.messages)
+                      ..where((tbl) => tbl.messageStatus.equals(0))
                       ..where((tbl) => tbl.chatId.equals(chatId)))
                     .get())
                 .map<ExtendedMessage>((e) => ExtendedMessage.fromMessage(e))
@@ -59,6 +59,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         for (var msg in response) {
           await messageDatabase.into(messageDatabase.messages).insert(
               MessagesCompanion.insert(
+                  messageStatus: 0,
                   chatId: chatId,
                   data: DateTime.now(),
                   role: msg.role.name,
