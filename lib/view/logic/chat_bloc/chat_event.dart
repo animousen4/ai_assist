@@ -26,9 +26,7 @@ class _ReceiveError extends ChatEvent {
   _ReceiveError(this.error);
 }
 
-class ClearError extends ChatEvent {
-  
-}
+class ClearError extends ChatEvent {}
 
 class AddMessageEvent extends MessageEvent {
   AddMessageEvent(super.messages);

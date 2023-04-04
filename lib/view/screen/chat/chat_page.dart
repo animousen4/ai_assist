@@ -27,6 +27,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   late final TextEditingController textEditingController;
   late final ScrollController _scrollController;
+  late TapDownDetails tdDetails;
   ChatGptRole chatGptRole = ChatGptRole.user;
   @override
   Widget build(BuildContext context) {
@@ -114,7 +115,8 @@ class _ChatPageState extends State<ChatPage> {
                     itemBuilder: (context, index) {
                       return BlocBuilder<SelectionChatBloc, SelectionChatState>(
                         builder: (context, selectionState) {
-                          return Container(
+                          return AnimatedContainer(
+                            duration: Duration(milliseconds: 100),
                             color: selectionState.selectedMessagesId
                                     .contains(msgs[index].id)
                                 ? Colors.white.withOpacity(0.3)
@@ -127,15 +129,45 @@ class _ChatPageState extends State<ChatPage> {
                                   context
                                       .read<SelectionChatBloc>()
                                       .add(SelectMessage(msgs[index].id));
-                                  Logger().d(
-                                      "long press message with chatId:${msgs[index].chatId}");
                                 },
-                                onTap: () {
+                                onTapDown: (details) => tdDetails = details,
+                                onTap: () async {
+                                  Logger().d("onTd");
                                   if (selectionState.isSelectionMode) {
                                     context
                                         .read<SelectionChatBloc>()
                                         .add(SelectMessage(msgs[index].id));
-                                  } else {}
+                                  } else {
+                                    var res = showMenu<String>(
+                                        context: context,
+                                        position: RelativeRect.fromLTRB(
+                                            tdDetails.globalPosition.dx,
+                                            tdDetails.globalPosition.dy,
+                                            MediaQuery.of(context).size.width -
+                                                tdDetails.globalPosition.dx,
+                                            MediaQuery.of(context).size.height -
+                                                tdDetails.globalPosition.dy),
+                                        items: [
+                                          PopupMenuItem(
+                                              value: "delete",
+                                              child: IconLabel(
+                                                  icon: Icon(
+                                                      Icons.delete_outline),
+                                                  text: Text("Delete"))),
+                                          PopupMenuItem(
+                                              value: "edit",
+                                              child: IconLabel(
+                                                  icon:
+                                                      Icon(Icons.edit_outlined),
+                                                  text: Text("Edit")))
+                                        ]);
+                                    // switch (res) {
+                                    //   case value:
+
+                                    //     break;
+                                    //   default:
+                                    // }
+                                  }
                                 },
                                 child: BubbleNormal(
                                   text: msgs[index].content,
@@ -211,7 +243,18 @@ class _ChatPageState extends State<ChatPage> {
                                     // PROCEESS
                                     //context.read<SelectionChatBloc>();
                                   } else {
-                                    _submitMessage(context);
+                                    //_submitMessage(context);
+                                    context.read<ChatBloc>().add(
+                                            AddMessageEvent([
+                                          MessageAdapter(
+                                              content:
+                                                  textEditingController.text,
+                                              role: chatGptRole)
+                                        ],));
+
+                                    setState(() {
+                                      textEditingController.text = "";
+                                    });
                                   }
                                 },
                                 icon: Icon(Icons.send)),
@@ -231,13 +274,6 @@ class _ChatPageState extends State<ChatPage> {
 
   void _submitMessage(BuildContext context) {
     //logger.d("Submitted: $messageText");
-    context.read<ChatBloc>().add(AddMessageEvent([
-          MessageAdapter(content: textEditingController.text, role: chatGptRole)
-        ]));
-
-    setState(() {
-      textEditingController.text = "";
-    });
   }
 
   @override

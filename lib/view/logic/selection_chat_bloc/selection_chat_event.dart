@@ -11,8 +11,4 @@ class SelectMessage extends SelectionChatEvent {
 
 class DeleteSelectedMessages extends SelectionChatEvent {}
 
-class ModifySelectedMessage extends SelectionChatEvent {
-  final String newText;
-
-  ModifySelectedMessage(this.newText);
-}
+class SwitchModificationMode extends SelectionChatEvent {}

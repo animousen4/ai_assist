@@ -12,7 +12,8 @@ class SelectionChatBloc extends Bloc<SelectionChatEvent, SelectionChatState> {
   final MessageDatabase messageDatabase;
   final Logger logger = Logger();
   SelectionChatBloc({required this.messageDatabase})
-      : super(SelectionChatState(selectedMessagesId: [], isModificationMode: false)) {
+      : super(SelectionChatState(
+            selectedMessagesId: [], isModificationMode: false)) {
     on<SelectMessage>((event, emit) {
       if (state.selectedMessagesId.contains(event.chatId)) {
         emit(state.copyWith(
@@ -32,10 +33,14 @@ class SelectionChatBloc extends Bloc<SelectionChatEvent, SelectionChatState> {
       emit(state.copyWith(selectedMessagesId: []));
     });
 
-    on<ModifySelectedMessage>((event, emit) async {
-      await (messageDatabase.update(messageDatabase.messages)
-            ..where((tbl) => tbl.chatId.equals(state.selectedMessagesId.first)))
-          .write(MessagesCompanion(content: Value(event.newText)));
+    // on<ModifySelectedMessage>((event, emit) async {
+    //   await (messageDatabase.update(messageDatabase.messages)
+    //         ..where((tbl) => tbl.chatId.equals(state.selectedMessagesId.first)))
+    //       .write(MessagesCompanion(content: Value(event.newText)));
+    // });
+    on<SwitchModificationMode>((event, emit) {
+      emit(state.copyWith(isModificationMode: !state.isModificationMode));
+      
     });
   }
 }
