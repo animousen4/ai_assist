@@ -67,7 +67,9 @@ class SelectionBloc extends Bloc<SelectionEvent, SelectionState> {
 
     on<Rename>((event, emit) async {
       await (messageDatabase.update(messageDatabase.chats)
-        ..where((tbl) => tbl.chatId.equals(state.selectedChatIds.first))).write(ChatsCompanion(chatName: Value(event.newName)));
+            ..where((tbl) => tbl.chatId.equals(state.selectedChatIds.first)))
+          .write(ChatsCompanion(chatName: Value(event.newName)));
+      emit(state.copyWith(selectedChatIds: []));
     });
   }
 }

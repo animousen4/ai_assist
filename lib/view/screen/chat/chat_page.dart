@@ -1,6 +1,7 @@
 import 'package:ai_assist/model/db/c/message_db.dart';
 import 'package:ai_assist/view/logic/chat_manager/chat_manager.dart';
 import 'package:ai_assist/view/widget/chat_header_sliver.dart';
+import 'package:ai_assist/view/widget/icon_label.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
@@ -67,7 +68,9 @@ class _ChatPageState extends State<ChatPage> {
                         },
                         itemBuilder: (context) => [
                               PopupMenuItem(
-                                child: Text("Delete"),
+                                child: IconLabel(
+                                    icon: Icon(Icons.delete_outline),
+                                    text: Text("Delete")),
                                 value: "delete",
                               )
                             ]);
@@ -207,7 +210,6 @@ class _ChatPageState extends State<ChatPage> {
                                   if (selectionState.isModificationMode) {
                                     // PROCEESS
                                     //context.read<SelectionChatBloc>();
-
                                   } else {
                                     _submitMessage(context);
                                   }
