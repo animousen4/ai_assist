@@ -1,16 +1,15 @@
 import 'dart:io';
-import 'package:ai_assist/model/db/table/messages_table.dart';
+import 'package:ai_assist/model/db/table/token_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
+part 'token_db.g.dart';
 
-import 'table/chats_table.dart';
-part 'abstract_message_db.g.dart';
-
-@DriftDatabase(tables: [Messages, Chats])
-class AbstractMessageDatabase extends _$AbstractMessageDatabase {
-  AbstractMessageDatabase(super.e);
+@DriftDatabase(tables: [GptTokens])
+class TokenDatabase extends _$TokenDatabase {
+  TokenDatabase(super.e);
 
   @override
   int get schemaVersion => 1;
@@ -20,7 +19,3 @@ class AbstractMessageDatabase extends _$AbstractMessageDatabase {
         await m.createAll();
   });
 }
-
-
-
-

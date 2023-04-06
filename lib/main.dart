@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
-import 'package:ai_assist/model/db/c/template_db.dart';
 //import 'package:ai_assist/model/db/template_db.dart';
 import 'package:ai_assist/view/logic/chat_manager/chat_manager.dart';
 import 'package:ai_assist/view/routes/routes.dart';

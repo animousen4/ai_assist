@@ -12,7 +12,6 @@ import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../../../model/db/c/template_db.dart';
 import '../../logic/chat_bloc/chat_bloc.dart';
 import '../../logic/selection_bloc/selection_bloc.dart';
 
