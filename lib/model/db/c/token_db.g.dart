@@ -18,6 +18,18 @@ class $GptTokensTable extends GptTokens
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _isUsingMeta =
+      const VerificationMeta('isUsing');
+  @override
+  late final GeneratedColumn<bool> isUsing =
+      GeneratedColumn<bool>('is_using', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+            SqlDialect.sqlite: 'CHECK ("is_using" IN (0, 1))',
+            SqlDialect.mysql: '',
+            SqlDialect.postgres: '',
+          }));
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<int> status = GeneratedColumn<int>(
@@ -42,7 +54,7 @@ class $GptTokensTable extends GptTokens
       type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, status, addDate, refreshDate, token];
+      [id, isUsing, status, addDate, refreshDate, token];
   @override
   String get aliasedName => _alias ?? 'gpt_tokens';
   @override
@@ -54,6 +66,12 @@ class $GptTokensTable extends GptTokens
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('is_using')) {
+      context.handle(_isUsingMeta,
+          isUsing.isAcceptableOrUnknown(data['is_using']!, _isUsingMeta));
+    } else if (isInserting) {
+      context.missing(_isUsingMeta);
     }
     if (data.containsKey('status')) {
       context.handle(_statusMeta,
@@ -90,6 +108,8 @@ class $GptTokensTable extends GptTokens
     return GptToken(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      isUsing: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_using'])!,
       status: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}status'])!,
       addDate: attachedDatabase.typeMapping
@@ -109,12 +129,14 @@ class $GptTokensTable extends GptTokens
 
 class GptToken extends DataClass implements Insertable<GptToken> {
   final int id;
+  final bool isUsing;
   final int status;
   final DateTime addDate;
   final DateTime? refreshDate;
   final String token;
   const GptToken(
       {required this.id,
+      required this.isUsing,
       required this.status,
       required this.addDate,
       this.refreshDate,
@@ -123,6 +145,7 @@ class GptToken extends DataClass implements Insertable<GptToken> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['is_using'] = Variable<bool>(isUsing);
     map['status'] = Variable<int>(status);
     map['add_date'] = Variable<DateTime>(addDate);
     if (!nullToAbsent || refreshDate != null) {
@@ -135,6 +158,7 @@ class GptToken extends DataClass implements Insertable<GptToken> {
   GptTokensCompanion toCompanion(bool nullToAbsent) {
     return GptTokensCompanion(
       id: Value(id),
+      isUsing: Value(isUsing),
       status: Value(status),
       addDate: Value(addDate),
       refreshDate: refreshDate == null && nullToAbsent
@@ -149,6 +173,7 @@ class GptToken extends DataClass implements Insertable<GptToken> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GptToken(
       id: serializer.fromJson<int>(json['id']),
+      isUsing: serializer.fromJson<bool>(json['isUsing']),
       status: serializer.fromJson<int>(json['status']),
       addDate: serializer.fromJson<DateTime>(json['addDate']),
       refreshDate: serializer.fromJson<DateTime?>(json['refreshDate']),
@@ -160,6 +185,7 @@ class GptToken extends DataClass implements Insertable<GptToken> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'isUsing': serializer.toJson<bool>(isUsing),
       'status': serializer.toJson<int>(status),
       'addDate': serializer.toJson<DateTime>(addDate),
       'refreshDate': serializer.toJson<DateTime?>(refreshDate),
@@ -169,12 +195,14 @@ class GptToken extends DataClass implements Insertable<GptToken> {
 
   GptToken copyWith(
           {int? id,
+          bool? isUsing,
           int? status,
           DateTime? addDate,
           Value<DateTime?> refreshDate = const Value.absent(),
           String? token}) =>
       GptToken(
         id: id ?? this.id,
+        isUsing: isUsing ?? this.isUsing,
         status: status ?? this.status,
         addDate: addDate ?? this.addDate,
         refreshDate: refreshDate.present ? refreshDate.value : this.refreshDate,
@@ -184,6 +212,7 @@ class GptToken extends DataClass implements Insertable<GptToken> {
   String toString() {
     return (StringBuffer('GptToken(')
           ..write('id: $id, ')
+          ..write('isUsing: $isUsing, ')
           ..write('status: $status, ')
           ..write('addDate: $addDate, ')
           ..write('refreshDate: $refreshDate, ')
@@ -193,12 +222,14 @@ class GptToken extends DataClass implements Insertable<GptToken> {
   }
 
   @override
-  int get hashCode => Object.hash(id, status, addDate, refreshDate, token);
+  int get hashCode =>
+      Object.hash(id, isUsing, status, addDate, refreshDate, token);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is GptToken &&
           other.id == this.id &&
+          other.isUsing == this.isUsing &&
           other.status == this.status &&
           other.addDate == this.addDate &&
           other.refreshDate == this.refreshDate &&
@@ -207,12 +238,14 @@ class GptToken extends DataClass implements Insertable<GptToken> {
 
 class GptTokensCompanion extends UpdateCompanion<GptToken> {
   final Value<int> id;
+  final Value<bool> isUsing;
   final Value<int> status;
   final Value<DateTime> addDate;
   final Value<DateTime?> refreshDate;
   final Value<String> token;
   const GptTokensCompanion({
     this.id = const Value.absent(),
+    this.isUsing = const Value.absent(),
     this.status = const Value.absent(),
     this.addDate = const Value.absent(),
     this.refreshDate = const Value.absent(),
@@ -220,15 +253,18 @@ class GptTokensCompanion extends UpdateCompanion<GptToken> {
   });
   GptTokensCompanion.insert({
     this.id = const Value.absent(),
+    required bool isUsing,
     required int status,
     required DateTime addDate,
     this.refreshDate = const Value.absent(),
     required String token,
-  })  : status = Value(status),
+  })  : isUsing = Value(isUsing),
+        status = Value(status),
         addDate = Value(addDate),
         token = Value(token);
   static Insertable<GptToken> custom({
     Expression<int>? id,
+    Expression<bool>? isUsing,
     Expression<int>? status,
     Expression<DateTime>? addDate,
     Expression<DateTime>? refreshDate,
@@ -236,6 +272,7 @@ class GptTokensCompanion extends UpdateCompanion<GptToken> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (isUsing != null) 'is_using': isUsing,
       if (status != null) 'status': status,
       if (addDate != null) 'add_date': addDate,
       if (refreshDate != null) 'refresh_date': refreshDate,
@@ -245,12 +282,14 @@ class GptTokensCompanion extends UpdateCompanion<GptToken> {
 
   GptTokensCompanion copyWith(
       {Value<int>? id,
+      Value<bool>? isUsing,
       Value<int>? status,
       Value<DateTime>? addDate,
       Value<DateTime?>? refreshDate,
       Value<String>? token}) {
     return GptTokensCompanion(
       id: id ?? this.id,
+      isUsing: isUsing ?? this.isUsing,
       status: status ?? this.status,
       addDate: addDate ?? this.addDate,
       refreshDate: refreshDate ?? this.refreshDate,
@@ -263,6 +302,9 @@ class GptTokensCompanion extends UpdateCompanion<GptToken> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (isUsing.present) {
+      map['is_using'] = Variable<bool>(isUsing.value);
     }
     if (status.present) {
       map['status'] = Variable<int>(status.value);
@@ -283,6 +325,7 @@ class GptTokensCompanion extends UpdateCompanion<GptToken> {
   String toString() {
     return (StringBuffer('GptTokensCompanion(')
           ..write('id: $id, ')
+          ..write('isUsing: $isUsing, ')
           ..write('status: $status, ')
           ..write('addDate: $addDate, ')
           ..write('refreshDate: $refreshDate, ')

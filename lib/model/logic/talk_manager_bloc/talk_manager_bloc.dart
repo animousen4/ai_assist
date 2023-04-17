@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:ai_assist/model/chat/extended_chat.dart';
 import 'package:ai_assist/model/db/abstract_message_db.dart';
-import 'package:ai_assist/view/logic/impl/addable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:drift/drift.dart';
 import 'package:gpt_api/gpt_api.dart';

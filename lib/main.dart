@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
 //import 'package:ai_assist/model/db/template_db.dart';
-import 'package:ai_assist/view/logic/chat_manager/chat_manager.dart';
 import 'package:ai_assist/view/routes/routes.dart';
 import 'package:ai_assist/view/theme/app_theme.dart';
 import 'package:drift/drift.dart';
@@ -16,6 +15,8 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common/sqlite_api.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'model/logic/chat_manager/chat_manager.dart';
 
 void main() async {
   sqfliteFfiInit();
@@ -30,6 +31,11 @@ void main() async {
   ));
 }
 
+/*
+curl https://api.openai.com/v1/chat/completions -H "Content-Type: application/json" -H "Authorization: Bearer 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" -d "{ model: 'gpt-3.5-turbo', messages: [{role: 'user', content: 'Hello!'}] }"
+
+
+ */
 class MyApp extends StatelessWidget {
   final AppRouter appRouter;
   final ChatManager chatManager;

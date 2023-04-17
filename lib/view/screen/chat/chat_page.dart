@@ -1,5 +1,4 @@
 import 'package:ai_assist/model/db/c/message_db.dart';
-import 'package:ai_assist/view/logic/chat_manager/chat_manager.dart';
 import 'package:ai_assist/view/widget/chat_header_sliver.dart';
 import 'package:ai_assist/view/widget/icon_label.dart';
 import 'package:auto_route/auto_route.dart';
@@ -14,8 +13,10 @@ import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../../logic/chat_bloc/chat_bloc.dart';
-import '../../logic/selection_chat_bloc/selection_chat_bloc.dart';
+import '../../../model/logic/chat_bloc/chat_bloc.dart';
+import '../../../model/logic/chat_manager/chat_manager.dart';
+import '../../../model/logic/selection_chat_bloc/selection_chat_bloc.dart';
+
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key, @PathParam('chatId') required this.chatId});

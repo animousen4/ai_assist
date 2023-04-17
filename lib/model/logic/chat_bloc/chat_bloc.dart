@@ -4,7 +4,6 @@ import 'package:ai_assist/model/chat/extended_chat.dart';
 import 'package:ai_assist/model/chat/extended_message.dart';
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
-import 'package:ai_assist/view/logic/impl/addable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:meta/meta.dart';

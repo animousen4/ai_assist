@@ -1,5 +1,4 @@
-import 'package:ai_assist/view/logic/chat_bloc/chat_bloc.dart';
-import 'package:ai_assist/view/logic/talk_manager_bloc/talk_manager_bloc.dart';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,8 +6,8 @@ import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 
 import '../../../../model/db/c/message_db.dart';
-import '../../../logic/chat_manager/chat_manager.dart';
-import '../../../logic/selection_bloc/selection_bloc.dart';
+import '../../../../model/logic/selection_bloc/selection_bloc.dart';
+import '../../../../model/logic/talk_manager_bloc/talk_manager_bloc.dart';
 import '../../../routes/routes.dart';
 
 class TalkChatsPage extends StatefulWidget {

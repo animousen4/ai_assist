@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:gpt_api/gpt_api.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../logic/chat_bloc/chat_bloc.dart';
-import '../logic/talk_manager_bloc/talk_manager_bloc.dart';
+import '../../model/logic/talk_manager_bloc/talk_manager_bloc.dart';
+
 
 part 'routes.gr.dart';      
         

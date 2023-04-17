@@ -1,7 +1,5 @@
 import 'package:ai_assist/model/db/c/message_db.dart';
-import 'package:ai_assist/view/logic/chat_manager/chat_manager.dart';
-import 'package:ai_assist/view/logic/impl/addable.dart';
-import 'package:ai_assist/view/logic/talk_manager_bloc/talk_manager_bloc.dart';
+
 import 'package:ai_assist/view/routes/routes.dart';
 import 'package:ai_assist/view/screen/chat/chat_page.dart';
 import 'package:ai_assist/view/screen/home/page/talk_chats.dart';
@@ -12,8 +10,9 @@ import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../../logic/chat_bloc/chat_bloc.dart';
-import '../../logic/selection_bloc/selection_bloc.dart';
+import '../../../model/logic/selection_bloc/selection_bloc.dart';
+import '../../../model/logic/talk_manager_bloc/talk_manager_bloc.dart';
+
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
