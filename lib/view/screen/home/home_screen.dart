@@ -13,7 +13,6 @@ import 'package:rxdart/rxdart.dart';
 import '../../../model/logic/selection_bloc/selection_bloc.dart';
 import '../../../model/logic/talk_manager_bloc/talk_manager_bloc.dart';
 
-
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
 
@@ -27,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
+    
     return BlocProvider(
       create: (context) =>
           SelectionBloc(messageDatabase: context.read<MessageDatabase>()),
@@ -65,11 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     .read<SelectionBloc>()
                                     .add(MakeCopyToTemplates());
                                 break;
-                      
+
                               case "toTalk":
                                 context.read<SelectionBloc>().add(MakeCopy());
                                 break;
-                      
+
                               case "rename":
                                 String newName = "";
                                 await showDialog(
@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ],
                                         ));
                                 break;
-                      
+
                               case "delete":
                                 context
                                     .read<SelectionBloc>()
@@ -194,6 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
           isTempl: true, messageDatabase: context.read<MessageDatabase>())
         ..add(LoadChats())
     ];
+
+    
     // talkm = TalkManagerBloc(
     //     isTempl: false, messageDatabase: context.read<MessageDatabase>())
     //   ..add(LoadChats());

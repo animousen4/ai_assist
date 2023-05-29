@@ -6,6 +6,7 @@ class GptTokens extends Table {
   IntColumn get id => integer().autoIncrement()();
 
   BoolColumn get isUsing => boolean()();
+  
   // 0 - ok, 1 - unavailable, 2 - refreshing, 3 - deleted
   IntColumn get status => integer()();
 

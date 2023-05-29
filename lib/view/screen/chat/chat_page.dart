@@ -1,9 +1,9 @@
 import 'package:ai_assist/model/db/c/message_db.dart';
 import 'package:ai_assist/view/widget/chat_header_sliver.dart';
 import 'package:ai_assist/view/widget/icon_label.dart';
+import 'package:ai_assist/view/widget/message_bubble_widget.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
-import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -16,7 +16,6 @@ import 'package:rxdart/rxdart.dart';
 import '../../../model/logic/chat_bloc/chat_bloc.dart';
 import '../../../model/logic/chat_manager/chat_manager.dart';
 import '../../../model/logic/selection_chat_bloc/selection_chat_bloc.dart';
-
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key, @PathParam('chatId') required this.chatId});
@@ -117,11 +116,11 @@ class _ChatPageState extends State<ChatPage> {
                       return BlocBuilder<SelectionChatBloc, SelectionChatState>(
                         builder: (context, selectionState) {
                           return AnimatedContainer(
-                            duration: Duration(milliseconds: 100),
+                            duration: Duration(milliseconds: 200),
                             color: selectionState.selectedMessagesId
                                     .contains(msgs[index].id)
                                 ? Colors.white.withOpacity(0.3)
-                                : Colors.transparent,
+                                : Colors.transparent.withBlue(1),
                             child: Padding(
                               padding:
                                   EdgeInsets.only(bottom: index == 0 ? 70 : 0),
@@ -170,11 +169,16 @@ class _ChatPageState extends State<ChatPage> {
                                     // }
                                   }
                                 },
-                                child: BubbleNormal(
+                                child: MessageBubbleWidget(
                                   text: msgs[index].content,
-                                  isSender:
+                                  isMine:
                                       msgs[index].role == ChatGptRole.user.name,
                                 ),
+                                // child: BubbleNormal(
+                                //   text: msgs[index].content,
+                                //   isSender:
+                                //       msgs[index].role == ChatGptRole.user.name,
+                                // ),
                               ),
                             ),
                           );
@@ -245,13 +249,16 @@ class _ChatPageState extends State<ChatPage> {
                                     //context.read<SelectionChatBloc>();
                                   } else {
                                     //_submitMessage(context);
-                                    context.read<ChatBloc>().add(
-                                            AddMessageEvent([
-                                          MessageAdapter(
-                                              content:
-                                                  textEditingController.text,
-                                              role: chatGptRole)
-                                        ],));
+                                    context
+                                        .read<ChatBloc>()
+                                        .add(AddMessageEvent(
+                                          [
+                                            MessageAdapter(
+                                                content:
+                                                    textEditingController.text,
+                                                role: chatGptRole)
+                                          ],
+                                        ));
 
                                     setState(() {
                                       textEditingController.text = "";

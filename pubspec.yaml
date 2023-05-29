@@ -5,7 +5,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 
 dependencies:
@@ -16,6 +16,8 @@ dependencies:
   flutter_bloc: ^8.1.2
   logger: ^1.2.2
   rxdart: ^0.27.7
+  google_fonts: ^4.0.5
+  flutter_syntax_view: ^4.0.0
   gpt_api:
     git:
       url: https://github.com/animousen4/gpt_api.git
@@ -23,7 +25,6 @@ dependencies:
   build_runner: ^2.3.3
   drift: ^2.5.0
   path_provider: ^2.0.13
-  extended_nested_scroll_view: 6.0.0
   chat_bubbles: ^1.4.1
   auto_route_generator: ^5.0.3
   sqflite: ^2.2.6
