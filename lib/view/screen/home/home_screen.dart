@@ -189,11 +189,19 @@ class _HomeScreenState extends State<HomeScreen> {
     blocList = [
       TalkManagerBloc(
           isTempl: false, messageDatabase: context.read<MessageDatabase>())
-        ..add(LoadChats()),
+        ..add(LoadChats())
+        ..add(AutoOpenChat()),
       TalkManagerBloc(
           isTempl: true, messageDatabase: context.read<MessageDatabase>())
         ..add(LoadChats())
     ];
+
+
+    
+
+
+
+    
 
     
     // talkm = TalkManagerBloc(

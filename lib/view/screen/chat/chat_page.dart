@@ -237,6 +237,8 @@ class _ChatPageState extends State<ChatPage> {
                     child: BlocBuilder<SelectionChatBloc, SelectionChatState>(
                       builder: (context, selectionState) {
                         return TextFormField(
+                          textCapitalization: TextCapitalization.sentences,
+                          keyboardType: TextInputType.text,
                           maxLines: null,
                           controller: textEditingController,
                           //onFieldSubmitted: (v) => _submitMessage(context),

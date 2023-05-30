@@ -23,56 +23,67 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
   late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TalkManagerBloc, TalkManagerState>(
+    return BlocConsumer<TalkManagerBloc, TalkManagerState>(
       bloc: widget.managerBloc,
+      listener: (context, state) {
+        if (state.defaultChatId != null) {
+          context.router.push(ChatPageRoute(
+                                          chatId: state.defaultChatId!));
+        }
+      },
       builder: (context, state) {
-        return BlocBuilder<SelectionBloc, SelectionState>(
-          builder: (context, selectionState) {
-            return ListView.builder(
-              itemBuilder: (context2, index) {
-                return ListTile(
-                    title: Text(state.chats[index].name),
-                    //selectedTileColor: Colors.white.withOpacity(0.2),
-                    selected: selectionState.selectedChatIds
-                        .contains(state.chats[index].chatId),
-                    leading: CircleAvatar(
-                      backgroundColor: selectionState.selectedChatIds
-                              .contains(state.chats[index].chatId)
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.inversePrimary,
-                      child: Text("$index"),
-                    ),
-                    onTap: () {
-                      if (selectionState.isSelectionMode) {
-                        context
-                            .read<SelectionBloc>()
-                            .add(SelectChat(state.chats[index].chatId));
-                      } else {
-                        logger.i(context.router.current);
-                        context.router.push(
-                            ChatPageRoute(chatId: state.chats[index].chatId));
-                      }
-                      //context.navigateTo();
-                    },
-                    onLongPress: () {
-                      if (!selectionState.isSelectionMode) {
-                        context
-                            .read<SelectionBloc>()
-                            .add(SelectChat(state.chats[index].chatId));
-                      }
-                    },
-                    subtitle: state.chats[index].messages.isEmpty
-                        ? Text(
-                            "Empty",
-                            style: TextStyle(color: Colors.grey),
-                          )
-                        : Text(
-                            "${state.chats[index].messages.last.role}: ${state.chats[index].messages.last.content}",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ));
+        return BlocBuilder<TalkManagerBloc, TalkManagerState>(
+          bloc: widget.managerBloc,
+          builder: (context, state) {
+            return BlocBuilder<SelectionBloc, SelectionState>(
+              builder: (context, selectionState) {
+                return ListView.builder(
+                  itemBuilder: (context2, index) {
+                    return ListTile(
+                        title: Text(state.chats[index].name),
+                        //selectedTileColor: Colors.white.withOpacity(0.2),
+                        selected: selectionState.selectedChatIds
+                            .contains(state.chats[index].chatId),
+                        leading: CircleAvatar(
+                          backgroundColor: selectionState.selectedChatIds
+                                  .contains(state.chats[index].chatId)
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.inversePrimary,
+                          child: Text("$index"),
+                        ),
+                        onTap: () {
+                          if (selectionState.isSelectionMode) {
+                            context
+                                .read<SelectionBloc>()
+                                .add(SelectChat(state.chats[index].chatId));
+                          } else {
+                            logger.i(context.router.current);
+                            context.router.push(ChatPageRoute(
+                                chatId: state.chats[index].chatId));
+                          }
+                          //context.navigateTo();
+                        },
+                        onLongPress: () {
+                          if (!selectionState.isSelectionMode) {
+                            context
+                                .read<SelectionBloc>()
+                                .add(SelectChat(state.chats[index].chatId));
+                          }
+                        },
+                        subtitle: state.chats[index].messages.isEmpty
+                            ? Text(
+                                "Empty",
+                                style: TextStyle(color: Colors.grey),
+                              )
+                            : Text(
+                                "${state.chats[index].messages.last.role}: ${state.chats[index].messages.last.content}",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ));
+                  },
+                  itemCount: state.chats.length,
+                );
               },
-              itemCount: state.chats.length,
             );
           },
         );
