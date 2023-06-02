@@ -25,6 +25,12 @@ class _$AppRouter extends RootStackRouter {
         child: HomeScreen(key: args.key),
       );
     },
+    SettingsScreenRoute.name: (routeData) {
+      return MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: const SettingsScreen(),
+      );
+    },
     ChatPageRoute.name: (routeData) {
       final pathParams = routeData.inheritedPathParams;
       final args = routeData.argsAs<ChatPageRouteArgs>(
@@ -69,6 +75,10 @@ class _$AppRouter extends RootStackRouter {
           ],
         ),
         RouteConfig(
+          SettingsScreenRoute.name,
+          path: '/settings',
+        ),
+        RouteConfig(
           ChatPageRoute.name,
           path: '/chat/:chatId',
         ),
@@ -100,6 +110,18 @@ class HomeScreenRouteArgs {
   String toString() {
     return 'HomeScreenRouteArgs{key: $key}';
   }
+}
+
+/// generated route for
+/// [SettingsScreen]
+class SettingsScreenRoute extends PageRouteInfo<void> {
+  const SettingsScreenRoute()
+      : super(
+          SettingsScreenRoute.name,
+          path: '/settings',
+        );
+
+  static const String name = 'SettingsScreenRoute';
 }
 
 /// generated route for

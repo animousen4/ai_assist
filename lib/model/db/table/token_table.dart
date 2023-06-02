@@ -7,7 +7,7 @@ class GptTokens extends Table {
 
   BoolColumn get isUsing => boolean()();
   
-  // 0 - ok, 1 - unavailable, 2 - refreshing, 3 - deleted
+  // 0 - ok, 1 - unavailable, 2 - refreshing, 3 - bad, 4 - tempBad (timeOut),5 - deleted
   IntColumn get status => integer()();
 
   DateTimeColumn get addDate => dateTime()();

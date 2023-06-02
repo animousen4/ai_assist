@@ -1,4 +1,5 @@
 import 'package:ai_assist/model/db/c/message_db.dart';
+import 'package:ai_assist/model/logic/settings/settings_bloc.dart';
 
 import 'package:ai_assist/view/routes/routes.dart';
 import 'package:ai_assist/view/screen/chat/chat_page.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../model/logic/selection_bloc/selection_bloc.dart';
 import '../../../model/logic/talk_manager_bloc/talk_manager_bloc.dart';
@@ -26,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   late int curBlocIndex;
   @override
   Widget build(BuildContext context) {
-    
     return BlocProvider(
       create: (context) =>
           SelectionBloc(messageDatabase: context.read<MessageDatabase>()),
@@ -151,7 +152,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                     return SizedBox();
                   },
-                )
+                ),
+                IconButton(
+                    onPressed: () {
+                      context.pushRoute(SettingsScreenRoute());
+                    },
+                    icon: Icon(Icons.settings)),
               ],
             ),
             body: child,
@@ -189,21 +195,17 @@ class _HomeScreenState extends State<HomeScreen> {
     blocList = [
       TalkManagerBloc(
           isTempl: false, messageDatabase: context.read<MessageDatabase>())
-        ..add(LoadChats())
-        ..add(AutoOpenChat()),
+        ..add(LoadChats()),
+      //..add(AutoOpenChat()),
       TalkManagerBloc(
           isTempl: true, messageDatabase: context.read<MessageDatabase>())
         ..add(LoadChats())
     ];
 
+    if (context.read<SharedPreferences>().getBool(autoChatKey) ?? true) {
+      blocList[0].add(AutoOpenChat());
+    }
 
-    
-
-
-
-    
-
-    
     // talkm = TalkManagerBloc(
     //     isTempl: false, messageDatabase: context.read<MessageDatabase>())
     //   ..add(LoadChats());

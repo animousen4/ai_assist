@@ -335,8 +335,8 @@ class GptTokensCompanion extends UpdateCompanion<GptToken> {
   }
 }
 
-abstract class _$TokenDatabase extends GeneratedDatabase {
-  _$TokenDatabase(QueryExecutor e) : super(e);
+abstract class _$AbstractTokenDatabase extends GeneratedDatabase {
+  _$AbstractTokenDatabase(QueryExecutor e) : super(e);
   late final $GptTokensTable gptTokens = $GptTokensTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>

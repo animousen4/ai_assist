@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
+import 'package:ai_assist/model/db/c/token_db.dart';
+import 'package:ai_assist/model/logic/settings/settings_bloc.dart';
+import 'package:ai_assist/model/service/multi_authorization_service.dart';
 //import 'package:ai_assist/model/db/template_db.dart';
 import 'package:ai_assist/view/routes/routes.dart';
 import 'package:ai_assist/view/theme/app_theme.dart';
@@ -13,6 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -20,14 +24,19 @@ import 'model/logic/chat_manager/chat_manager.dart';
 
 void main() async {
   sqfliteFfiInit();
+
+  final sharedPreferences = await SharedPreferences.getInstance();
+  final tokenDatabase = TokenDatabase();
+  // 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
   final appRouter = AppRouter();
-  final chatManager = ChatManager(ChatGptService.create(client(
-      AuthorizationSericeV1(
-          "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"))));
+  final chatManager = ChatManager(
+      ChatGptService.create(client(MultiAuthorizationService(tokenDatabase))));
 
   runApp(MyApp(
     appRouter: appRouter,
     chatManager: chatManager,
+    sharedPreferences: sharedPreferences,
+    tokenDatabase: tokenDatabase,
   ));
 }
 
@@ -38,8 +47,15 @@ curl https://api.openai.com/v1/chat/completions -H "Content-Type: application/js
  */
 class MyApp extends StatelessWidget {
   final AppRouter appRouter;
+  final TokenDatabase tokenDatabase;
   final ChatManager chatManager;
-  const MyApp({super.key, required this.appRouter, required this.chatManager});
+  final SharedPreferences sharedPreferences;
+  const MyApp(
+      {super.key,
+      required this.appRouter,
+      required this.chatManager,
+      required this.sharedPreferences,
+      required this.tokenDatabase});
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +65,12 @@ class MyApp extends StatelessWidget {
           create: (context) => MessageDatabase(),
           dispose: (context, value) => value.close(),
         ),
-        Provider<ChatManager>.value(value: chatManager)
+        Provider.value(
+          value: tokenDatabase,
+        ),
+        Provider(create: (context) => sharedPreferences),
+        Provider<ChatManager>.value(value: chatManager),
+        Provider(create: (context) => SettingsBloc(tokenDatabase: tokenDatabase, prefs: sharedPreferences))
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
