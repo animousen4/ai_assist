@@ -26,9 +26,8 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
     return BlocConsumer<TalkManagerBloc, TalkManagerState>(
       bloc: widget.managerBloc,
       listener: (context, state) {
-        if (state.defaultChatId != null) {
-          context.router.push(ChatPageRoute(
-                                          chatId: state.defaultChatId!));
+        if (state.toOpenChatId != null) {
+          context.router.push(ChatPageRoute(chatId: state.toOpenChatId!));
         }
       },
       builder: (context, state) {

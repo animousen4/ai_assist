@@ -28,6 +28,7 @@ class _ChatPageState extends State<ChatPage> {
   late final TextEditingController textEditingController;
   late final ScrollController _scrollController;
   late TapDownDetails tdDetails;
+  late final focusNode = FocusNode();
   ChatGptRole chatGptRole = ChatGptRole.user;
   @override
   Widget build(BuildContext context) {
@@ -241,8 +242,9 @@ class _ChatPageState extends State<ChatPage> {
                           keyboardType: TextInputType.text,
                           maxLines: null,
                           controller: textEditingController,
-                          //onFieldSubmitted: (v) => _submitMessage(context),
+                          onFieldSubmitted: (v) => _submitMessage(context),
                           autofocus: true,
+                          focusNode: focusNode,
                           decoration: InputDecoration(
                             suffixIcon: IconButton(
                                 onPressed: () {
@@ -250,21 +252,7 @@ class _ChatPageState extends State<ChatPage> {
                                     // PROCEESS
                                     //context.read<SelectionChatBloc>();
                                   } else {
-                                    //_submitMessage(context);
-                                    context
-                                        .read<ChatBloc>()
-                                        .add(AddMessageEvent(
-                                          [
-                                            MessageAdapter(
-                                                content:
-                                                    textEditingController.text,
-                                                role: chatGptRole)
-                                          ],
-                                        ));
-
-                                    setState(() {
-                                      textEditingController.text = "";
-                                    });
+                                    _submitMessage(context);
                                   }
                                 },
                                 icon: Icon(Icons.send)),
@@ -283,7 +271,16 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _submitMessage(BuildContext context) {
-    //logger.d("Submitted: $messageText");
+    context.read<ChatBloc>().add(AddMessageEvent(
+          [
+            MessageAdapter(
+                content: textEditingController.text, role: chatGptRole)
+          ],
+        ));
+    focusNode.requestFocus();
+    setState(() {
+      textEditingController.text = "";
+    });
   }
 
   @override

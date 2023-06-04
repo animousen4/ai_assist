@@ -24,7 +24,7 @@ import 'model/logic/chat_manager/chat_manager.dart';
 
 void main() async {
   sqfliteFfiInit();
-
+  await WidgetsFlutterBinding.ensureInitialized();
   final sharedPreferences = await SharedPreferences.getInstance();
   final tokenDatabase = TokenDatabase();
   // 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
@@ -70,7 +70,10 @@ class MyApp extends StatelessWidget {
         ),
         Provider(create: (context) => sharedPreferences),
         Provider<ChatManager>.value(value: chatManager),
-        Provider(create: (context) => SettingsBloc(tokenDatabase: tokenDatabase, prefs: sharedPreferences))
+        Provider(
+            lazy: false,
+            create: (context) => SettingsBloc(
+                tokenDatabase: tokenDatabase, prefs: sharedPreferences))
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

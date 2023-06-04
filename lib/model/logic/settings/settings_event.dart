@@ -3,6 +3,16 @@ part of 'settings_bloc.dart';
 @immutable
 abstract class SettingsEvent {}
 
+class SelectItem extends SettingsEvent {
+  final int id;
+
+  SelectItem(this.id);
+}
+
+class DeleteSelectedKeys extends SettingsEvent {
+  
+}
+
 class ReloadSettings extends SettingsEvent {
   final List<GptToken> tokens;
 
@@ -20,6 +30,8 @@ class AddKey extends SettingsEvent {
 
   AddKey(this.key);
 }
+
+class RefreshAllTokens extends SettingsEvent {}
 
 class RefreshToken extends SettingsEvent {
   final int id;

@@ -24,14 +24,18 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   late final StreamSubscription<List<GptToken>> dataSub;
   final Logger logger = Logger();
   SettingsBloc({required this.tokenDatabase, required this.prefs})
-      : super(SettingsState(autoOpenChat: null, tokens: [])) {
-    dataSub =
-        tokenDatabase.select(tokenDatabase.gptTokens).watch().listen((event) {
+      : super(SettingsState(
+            autoOpenChat: prefs.getBool(autoChatKey) ?? true,
+            tokens: [],
+            selectedTokens: [])) {
+    dataSub = (tokenDatabase.select(tokenDatabase.gptTokens)
+          ..where((tbl) => tbl.status.isNotValue(5)))
+        .watch()
+        .listen((event) {
       add(ReloadSettings(event));
     });
     on<ReloadSettings>((event, emit) async {
-      emit(state.copyWith(
-          autoOpenChat: prefs.getBool(autoChatKey), tokens: event.tokens));
+      emit(state.copyWith(tokens: event.tokens));
     });
 
     on<ChangeAutoChatStatus>((event, emit) {
@@ -51,40 +55,74 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     });
 
     on<RefreshToken>((event, emit) async {
-      await (tokenDatabase.update(tokenDatabase.gptTokens)
-            ..where((tbl) => tbl.id.equals(event.id)))
-          .write(GptTokensCompanion(status: Value(2)));
-
-      try {
-        await ChatManager(ChatGptService.create(client(AuthorizationServiceV2(
-                token: (await (tokenDatabase.select(tokenDatabase.gptTokens)
-                          ..where((tbl) => tbl.id.equals(event.id)))
-                        .get())
-                    .first
-                    .token))))
-            .newOnlineChat
-            .sendUnsavedMessages([
-          ExtendedMessage(
-              date: DateTime.now(), content: "Hello", role: ChatGptRole.user)
-        ]);
-
-        await (tokenDatabase.update(tokenDatabase.gptTokens)
-              ..where((tbl) => tbl.id.equals(event.id)))
-            .write(GptTokensCompanion(
-                status: Value(0), refreshDate: Value(DateTime.now())));
-      } on TokenAuthError catch (e){
-        logger.d("!!!!!");
-        await (tokenDatabase.update(tokenDatabase.gptTokens)
-              ..where((tbl) => tbl.id.equals(event.id)))
-            .write(GptTokensCompanion(
-                status: Value(e.isTemporary ? 4 : 3), refreshDate: Value(DateTime.now())));
-      } catch (e) {
-        await (tokenDatabase.update(tokenDatabase.gptTokens)
-              ..where((tbl) => tbl.id.equals(event.id)))
-            .write(GptTokensCompanion(
-                status: Value(3), refreshDate: Value(DateTime.now())));
-      }
+      await refreshToken(event.id);
     });
+
+    on<SelectItem>((event, emit) {
+      state.selectedTokens.contains(event.id)
+          ? state.selectedTokens.remove(event.id)
+          : state.selectedTokens.add(event.id);
+      emit(state.copyWith(selectedTokens: state.selectedTokens));
+
+      logger.d(state.selectedTokens);
+    });
+
+    on<DeleteSelectedKeys>((event, emit) async {
+      //emit(state);
+
+      await (tokenDatabase.update(tokenDatabase.gptTokens)
+            ..where((tbl) => tbl.id.isIn(state.selectedTokens)))
+          .write(GptTokensCompanion(status: Value(5)));
+      emit(state.copyWith(selectedTokens: []));
+    });
+  }
+
+  Future<void> refreshToken(int id) async {
+    await (tokenDatabase.update(tokenDatabase.gptTokens)
+          ..where((tbl) => tbl.id.equals(id))
+          ..where((tbl) => tbl.status.isNotValue(5)))
+        .write(GptTokensCompanion(status: Value(2)));
+
+    try {
+      await ChatManager(ChatGptService.create(client(AuthorizationServiceV2(
+              token: (await (tokenDatabase.select(tokenDatabase.gptTokens)
+                        ..where((tbl) => tbl.id.equals(id)))
+                      .get())
+                  .first
+                  .token))))
+          .newOnlineChat
+          .sendUnsavedMessages([
+        ExtendedMessage(
+            date: DateTime.now(), content: "Hello", role: ChatGptRole.user)
+      ]);
+
+      await (tokenDatabase.update(tokenDatabase.gptTokens)
+            ..where((tbl) => tbl.id.equals(id)))
+          .write(GptTokensCompanion(
+              status: Value(0), refreshDate: Value(DateTime.now())));
+    } on TokenAuthError catch (e) {
+      logger.d("!!!!!");
+      await (tokenDatabase.update(tokenDatabase.gptTokens)
+            ..where((tbl) => tbl.id.equals(id)))
+          .write(GptTokensCompanion(
+              status: Value(e.isTemporary ? 4 : 3),
+              refreshDate: Value(DateTime.now())));
+    } catch (e) {
+      await (tokenDatabase.update(tokenDatabase.gptTokens)
+            ..where((tbl) => tbl.id.equals(id)))
+          .write(GptTokensCompanion(
+              status: Value(3), refreshDate: Value(DateTime.now())));
+    }
+  }
+
+  Future<void> refreshAll() async {
+    List<Future<void>> updates =
+        (await (tokenDatabase.select(tokenDatabase.gptTokens)
+                  ..where((tbl) => tbl.status.isNotValue(5)))
+                .get())
+            .map((e) => refreshToken(e.id))
+            .toList();
+    await Future.wait(updates);
   }
 
   @override

@@ -163,23 +163,24 @@ class _HomeScreenState extends State<HomeScreen> {
             body: child,
             floatingActionButton: FloatingActionButton(
               onPressed: () async {
-                String text = "";
-                await showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                          title: Text("Write a name of chat"),
-                          content: TextFormField(
-                            onChanged: (t) => text = t,
-                          ),
-                          actions: [
-                            TextButton(
-                                onPressed: () {
-                                  blocList[curBlocIndex].add(AddChat(text));
-                                  context.popRoute();
-                                },
-                                child: Text("OK"))
-                          ],
-                        ));
+                blocList[curBlocIndex].add(AddChat());
+                // String text = "";
+                // await showDialog(
+                //     context: context,
+                //     builder: (context) => AlertDialog(
+                //           title: Text("Write a name of chat"),
+                //           content: TextFormField(
+                //             onChanged: (t) => text = t,
+                //           ),
+                //           actions: [
+                //             TextButton(
+                //                 onPressed: () {
+                //                   blocList[curBlocIndex].add(AddChat(text));
+                //                   context.popRoute();
+                //                 },
+                //                 child: Text("OK"))
+                //           ],
+                //         ));
               },
               child: Icon(Icons.add),
             ),
@@ -196,7 +197,6 @@ class _HomeScreenState extends State<HomeScreen> {
       TalkManagerBloc(
           isTempl: false, messageDatabase: context.read<MessageDatabase>())
         ..add(LoadChats()),
-      //..add(AutoOpenChat()),
       TalkManagerBloc(
           isTempl: true, messageDatabase: context.read<MessageDatabase>())
         ..add(LoadChats())

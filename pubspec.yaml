@@ -20,6 +20,7 @@ dependencies:
   flutter_syntax_view: ^4.0.0
   shared_preferences: ^2.1.1
   timeago: ^3.4.0
+  timeago_flutter: ^3.4.0
   gpt_api:
     git:
       url: https://github.com/animousen4/gpt_api.git

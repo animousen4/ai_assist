@@ -4,6 +4,7 @@ import 'package:ai_assist/model/chat/extended_chat.dart';
 import 'package:ai_assist/model/chat/extended_message.dart';
 import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
+import 'package:ai_assist/model/service/multi_authorization_service.dart';
 import 'package:bloc/bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:meta/meta.dart';
@@ -72,7 +73,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     });
 
     on<_ReceiveError>((event, emit) {
-      emit(state.copyWith(error: () => event.error.toString()));
+      emit(state.copyWith(error: () => event.error is NoAuthorizationKeys ? "No current available authorization keys. Try again later" : event.error.toString()));
     });
     on<ClearError>((event, emit) {
       emit(state.copyWith(error: () => null));

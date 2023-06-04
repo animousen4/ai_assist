@@ -1,13 +1,16 @@
 part of 'settings_bloc.dart';
 
-
 class SettingsState {
-  bool? autoOpenChat;
-  List<GptToken> tokens;
+  final bool autoOpenChat;
+  final List<GptToken> tokens;
+  final List<int> selectedTokens;
 
-  SettingsState copyWith({bool? autoOpenChat, List<GptToken>? tokens}) =>
+  bool get isSelectionMode => selectedTokens.isNotEmpty;
+
+  SettingsState copyWith({bool? autoOpenChat, List<GptToken>? tokens, List<int>? selectedTokens}) =>
       SettingsState(
           autoOpenChat: autoOpenChat ?? this.autoOpenChat,
+          selectedTokens: selectedTokens ?? this.selectedTokens,
           tokens: tokens ?? this.tokens);
-  SettingsState({required this.autoOpenChat, required this.tokens});
+  SettingsState({required this.autoOpenChat, required this.tokens, required this.selectedTokens});
 }
