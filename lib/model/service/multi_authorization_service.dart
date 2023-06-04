@@ -23,7 +23,7 @@ class MultiAuthorizationService extends AuthorizationService {
               ..where((tbl) => tbl.status.equals(4))
               ..where((tbl) => tbl.isUsing.equals(true))
               ..where((tbl) => tbl.refreshDate
-                  .modify(DateTimeModifier.minutes(1))
+                  .modify(DateTimeModifier.seconds(20))
                   .isSmallerOrEqualValue(DateTime.now())))
             .get();
     if (tokens.isEmpty) {
@@ -31,7 +31,8 @@ class MultiAuthorizationService extends AuthorizationService {
     } else {
       await (tokenDatabase.update(tokenDatabase.gptTokens)
             ..where((tbl) => tbl.id.equals(tokens.first.id)))
-          .write(GptTokensCompanion(status: Value(0), refreshDate: Value(DateTime.now())));
+          .write(GptTokensCompanion(
+              status: Value(0), refreshDate: Value(DateTime.now())));
       return tokens.first.token;
     }
   }
@@ -39,6 +40,7 @@ class MultiAuthorizationService extends AuthorizationService {
   @override
   Future<String> updateApiBearerToken(String? oldToken, int code) async {
     logger.d("New token is required. Old token: $oldToken");
+    // if header is null, correct the code Chopper -> send(req, response, request);
     await (tokenDatabase.update(tokenDatabase.gptTokens)
           ..where((tbl) => tbl.token.equals(oldToken!)))
         .write(GptTokensCompanion(

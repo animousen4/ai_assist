@@ -21,6 +21,8 @@ dependencies:
   shared_preferences: ^2.1.1
   timeago: ^3.4.0
   timeago_flutter: ^3.4.0
+  simple_icons: ^7.10.0
+  url_launcher: ^6.1.11
   gpt_api:
     git:
       url: https://github.com/animousen4/gpt_api.git

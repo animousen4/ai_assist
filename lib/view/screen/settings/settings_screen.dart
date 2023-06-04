@@ -1,9 +1,14 @@
 import 'package:ai_assist/model/db/c/token_db.dart';
 import 'package:ai_assist/model/logic/chat_manager/chat_manager.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_icons/simple_icons.dart';
+import 'package:timeago_flutter/timeago_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../model/logic/settings/settings_bloc.dart';
 import '../../widget/icon_label.dart';
@@ -164,21 +169,50 @@ class SettingsScreen extends StatelessWidget {
                                         : gptToken.status == 2
                                             ? Icons.refresh
                                             : gptToken.status == 3
-                                                ? Icons.warning
-                                                : Icons.remove),
+                                                ? Icons.sync_disabled
+                                                : Icons.warning_amber),
                               ),
-                              subtitle: Text(
-                                  "Last time update: ${gptToken.status == 2 ? "updating" : gptToken.refreshDate ?? "unknown"}"),
+                              subtitle: gptToken.refreshDate == null
+                                  ? Text("Last update: ?")
+                                  : Timeago(
+                                      builder: (context, value) => Text(
+                                          "Last update: ${gptToken.status == 2 ? "updating" : value}"),
+                                      date: gptToken.refreshDate!),
                               onLongPress: () {
                                 context
                                     .read<SettingsBloc>()
                                     .add(SelectItem(gptToken.id));
+
                                 // contextWithBloc
                                 //     .read<SettingsBloc>()
                                 //     .add(RefreshToken(gptToken.id));
                               },
                             );
-                          }(state.tokens[i])
+                          }(state.tokens[i]),
+                        ListTile(
+                          title: Text(
+                            "About",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        ListTile(
+                          title: Text("Made with ❤ by animousen4"),
+                        ),
+                        ListTile(
+                          title: RichText(
+                              text: TextSpan(
+                            text: "Github",
+                            style:
+                                TextStyle(decoration: TextDecoration.underline),
+                            recognizer: new TapGestureRecognizer()
+                              ..onTap = () {
+                                //Logger().e("FFFF");
+                                launchUrl(
+                                    Uri.parse('https://github.com/animousen4'));
+                              },
+                          )),
+                          leading: Icon(SimpleIcons.github),
+                        ),
                       ],
                     ),
                   ));
