@@ -4,6 +4,7 @@ import 'package:ai_assist/view/screen/home/page/talk_chats.dart';
 import 'package:ai_assist/view/screen/settings/settings_screen.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../model/logic/talk_manager_bloc/talk_manager_bloc.dart';
 

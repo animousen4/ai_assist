@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../model/db/c/message_db.dart';
 import '../../../../model/logic/selection_bloc/selection_bloc.dart';
@@ -27,7 +28,9 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
       bloc: widget.managerBloc,
       listener: (context, state) {
         if (state.toOpenChatId != null) {
-          context.router.push(ChatPageRoute(chatId: state.toOpenChatId!));
+          context.router.push(ChatPageRoute(
+              chatId: state.toOpenChatId!,
+              sharedPreferences: context.read<SharedPreferences>()));
         }
       },
       builder: (context, state) {
@@ -58,6 +61,8 @@ class _TalkChatsPageState extends State<TalkChatsPage> {
                           } else {
                             logger.i(context.router.current);
                             context.router.push(ChatPageRoute(
+                                sharedPreferences:
+                                    context.read<SharedPreferences>(),
                                 chatId: state.chats[index].chatId));
                           }
                           //context.navigateTo();

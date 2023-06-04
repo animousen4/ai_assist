@@ -12,14 +12,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gpt_api/gpt_api.dart';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../model/logic/chat_bloc/chat_bloc.dart';
 import '../../../model/logic/chat_manager/chat_manager.dart';
 import '../../../model/logic/selection_chat_bloc/selection_chat_bloc.dart';
+import '../../../model/logic/settings/settings_bloc.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key, @PathParam('chatId') required this.chatId});
+  const ChatPage({super.key, @PathParam('chatId') required this.chatId, required this.sharedPreferences});
   final int chatId;
+  final SharedPreferences sharedPreferences;
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
@@ -162,24 +165,14 @@ class _ChatPageState extends State<ChatPage> {
                                                       Icon(Icons.edit_outlined),
                                                   text: Text("Edit")))
                                         ]);
-                                    // switch (res) {
-                                    //   case value:
-
-                                    //     break;
-                                    //   default:
-                                    // }
                                   }
                                 },
                                 child: MessageBubbleWidget(
                                   text: msgs[index].content,
+                                  codeViewThemeIndex: widget.sharedPreferences.getInt(codeViewThemeIndexKey) ?? 0,
                                   isMine:
                                       msgs[index].role == ChatGptRole.user.name,
                                 ),
-                                // child: BubbleNormal(
-                                //   text: msgs[index].content,
-                                //   isSender:
-                                //       msgs[index].role == ChatGptRole.user.name,
-                                // ),
                               ),
                             ),
                           );

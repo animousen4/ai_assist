@@ -32,14 +32,13 @@ class _$AppRouter extends RootStackRouter {
       );
     },
     ChatPageRoute.name: (routeData) {
-      final pathParams = routeData.inheritedPathParams;
-      final args = routeData.argsAs<ChatPageRouteArgs>(
-          orElse: () => ChatPageRouteArgs(chatId: pathParams.getInt('chatId')));
+      final args = routeData.argsAs<ChatPageRouteArgs>();
       return MaterialPageX<dynamic>(
         routeData: routeData,
         child: ChatPage(
           key: args.key,
           chatId: args.chatId,
+          sharedPreferences: args.sharedPreferences,
         ),
       );
     },
@@ -130,12 +129,14 @@ class ChatPageRoute extends PageRouteInfo<ChatPageRouteArgs> {
   ChatPageRoute({
     Key? key,
     required int chatId,
+    required SharedPreferences sharedPreferences,
   }) : super(
           ChatPageRoute.name,
           path: '/chat/:chatId',
           args: ChatPageRouteArgs(
             key: key,
             chatId: chatId,
+            sharedPreferences: sharedPreferences,
           ),
           rawPathParams: {'chatId': chatId},
         );
@@ -147,15 +148,18 @@ class ChatPageRouteArgs {
   const ChatPageRouteArgs({
     this.key,
     required this.chatId,
+    required this.sharedPreferences,
   });
 
   final Key? key;
 
   final int chatId;
 
+  final SharedPreferences sharedPreferences;
+
   @override
   String toString() {
-    return 'ChatPageRouteArgs{key: $key, chatId: $chatId}';
+    return 'ChatPageRouteArgs{key: $key, chatId: $chatId, sharedPreferences: $sharedPreferences}';
   }
 }
 

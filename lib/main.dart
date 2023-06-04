@@ -4,6 +4,7 @@ import 'package:ai_assist/model/db/abstract_message_db.dart';
 import 'package:ai_assist/model/db/c/message_db.dart';
 import 'package:ai_assist/model/db/c/token_db.dart';
 import 'package:ai_assist/model/logic/settings/settings_bloc.dart';
+import 'package:ai_assist/model/logic/theme/theme_bloc.dart';
 import 'package:ai_assist/model/service/multi_authorization_service.dart';
 //import 'package:ai_assist/model/db/template_db.dart';
 import 'package:ai_assist/view/routes/routes.dart';
@@ -70,16 +71,21 @@ class MyApp extends StatelessWidget {
         ),
         Provider(create: (context) => sharedPreferences),
         Provider<ChatManager>.value(value: chatManager),
-        Provider(
+        Provider(create: (context) => ThemeBloc(sharedPreferences)),
+        Provider<SettingsBloc>(
             lazy: false,
             create: (context) => SettingsBloc(
                 tokenDatabase: tokenDatabase, prefs: sharedPreferences))
       ],
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        theme: AppThemeManager.dark,
-        routerDelegate: appRouter.delegate(),
-        routeInformationParser: appRouter.defaultRouteParser(),
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, state) {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            theme: state.themeData,
+            routerDelegate: appRouter.delegate(),
+            routeInformationParser: appRouter.defaultRouteParser(),
+          );
+        },
       ),
     );
   }

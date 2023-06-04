@@ -1,19 +1,28 @@
 import 'dart:ffi';
 
+import 'package:ai_assist/model/syntax/syntax_description.dart';
+import 'package:ai_assist/view/theme/message_bubble_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_syntax_view/flutter_syntax_view.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MessageBubbleWidget extends StatelessWidget {
-  const MessageBubbleWidget(
-      {super.key, required this.text, this.isMine = true, this.format = true});
+  const MessageBubbleWidget({
+    super.key,
+    required this.text,
+    this.codeViewThemeIndex = 0,
+    this.isMine = true,
+    this.format = true,
+  });
   final bool format;
   final bool isMine;
+  final int codeViewThemeIndex;
   final String text;
 
   @override
   Widget build(BuildContext context) {
+    final widgetTheme = Theme.of(context).extension<MessageBubbleTheme>()!;
     return Container(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
@@ -25,16 +34,18 @@ class MessageBubbleWidget extends StatelessWidget {
           //alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-            child: buildWidget(context),
+            child: buildWidget(context, widgetTheme),
           ),
           decoration: BoxDecoration(
-              color: Colors.grey[800], borderRadius: BorderRadius.circular(8)),
+              color: widgetTheme.messageColor, borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );
   }
 
-  Widget buildWidget(BuildContext context) {
+  Widget buildWidget(BuildContext context, MessageBubbleTheme widgetTheme) {
+    final syntaxTheme =
+        SyntaxDescription.getAllSyntaxes[codeViewThemeIndex].theme;
     List<Widget> widgets = [];
     List<String> lines = text.split('\n');
     String curBlock = "";
@@ -52,7 +63,7 @@ class MessageBubbleWidget extends StatelessWidget {
         widgets.add(Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child:
-              RichText(text: TextSpan(children: getTextSpanFromLine(curBlock))),
+              RichText(text: TextSpan(children: getTextSpanFromLine(curBlock, widgetTheme), style: GoogleFonts.roboto(color: widgetTheme.textColor))),
         ));
         curBlock = "";
 
@@ -85,7 +96,7 @@ class MessageBubbleWidget extends StatelessWidget {
                           borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(8),
                               topRight: Radius.circular(8)),
-                          color: Color.fromARGB(255, 75, 81, 83)
+                          color: widgetTheme.topperCodeColor
                           //Color(0xFF93C763) //Colors.grey[700],
                           ),
                       child: Padding(
@@ -94,7 +105,7 @@ class MessageBubbleWidget extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(codeSpec),
+                            Text(codeSpec, style: GoogleFonts.roboto(color: widgetTheme.textColor)),
                             SizedBox(
                               height: 20,
                               width: 20,
@@ -119,21 +130,21 @@ class MessageBubbleWidget extends StatelessWidget {
                     Container(
                       constraints: BoxConstraints(minWidth: double.infinity),
                       alignment: Alignment.topLeft,
-                      color: const Color(0xFF293134),
+                      color: syntaxTheme.backgroundColor,
                       child: SingleChildScrollView(
                         child: SyntaxView(
                           fontSize: 11,
                           code: curBlock,
                           withZoom: false,
                           syntax: Syntax.C,
-                          syntaxTheme: SyntaxTheme.obsidian(),
+                          syntaxTheme: syntaxTheme,
                         ),
                       ),
                     ),
                     Container(
                       height: 15,
                       decoration: BoxDecoration(
-                          color: const Color(0xFF293134),
+                          color: syntaxTheme.backgroundColor,
                           borderRadius: BorderRadius.only(
                               bottomLeft: Radius.circular(8),
                               bottomRight: Radius.circular(8))),
@@ -156,10 +167,10 @@ class MessageBubbleWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: RichText(
               text: TextSpan(
-                  style: GoogleFonts.roboto(),
+                  style: GoogleFonts.roboto(color: widgetTheme.textColor),
                   children: getTextSpanFromLine(curBlock.endsWith("\n")
                       ? curBlock.substring(0, curBlock.length - 1)
-                      : curBlock)))));
+                      : curBlock, widgetTheme)))));
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -168,7 +179,7 @@ class MessageBubbleWidget extends StatelessWidget {
     );
   }
 
-  List<TextSpan> getTextSpanFromLine(String line) {
+  List<TextSpan> getTextSpanFromLine(String line, MessageBubbleTheme widgetTheme) {
     List<TextSpan> list = [];
     String curText = "";
     for (int i = 0; i < line.length; i++) {
@@ -184,7 +195,7 @@ class MessageBubbleWidget extends StatelessWidget {
 
         list.add(TextSpan(
             text: curText,
-            style: GoogleFonts.robotoMono(color: Colors.green[400])));
+            style: GoogleFonts.robotoMono(color: widgetTheme.textHighlightColor)));
 
         curText = "";
       } else {

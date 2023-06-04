@@ -9,9 +9,14 @@ class SelectItem extends SettingsEvent {
   SelectItem(this.id);
 }
 
-class DeleteSelectedKeys extends SettingsEvent {
-  
+
+class SelectSyntaxTheme extends SettingsEvent {
+  final int index;
+
+  SelectSyntaxTheme(this.index);
 }
+
+class DeleteSelectedKeys extends SettingsEvent {}
 
 class ReloadSettings extends SettingsEvent {
   final List<GptToken> tokens;

@@ -1,9 +1,11 @@
 import 'package:ai_assist/model/db/c/token_db.dart';
 import 'package:ai_assist/model/logic/chat_manager/chat_manager.dart';
+import 'package:ai_assist/model/syntax/syntax_description.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_syntax_view/flutter_syntax_view.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_icons/simple_icons.dart';
@@ -11,6 +13,7 @@ import 'package:timeago_flutter/timeago_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../model/logic/settings/settings_bloc.dart';
+import '../../../model/logic/theme/theme_bloc.dart';
 import '../../widget/icon_label.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -54,6 +57,50 @@ class SettingsScreen extends StatelessWidget {
                     },
                     child: ListView(
                       children: [
+                        ListTile(
+                          title: Text(
+                            "Theme",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        BlocBuilder<ThemeBloc, ThemeState>(
+                          builder: (context, state) {
+                            return ListTile(
+                              title: Text("Dark mode:"),
+                              trailing: Switch(
+                                  value: state.isDark,
+                                  onChanged: (v) {
+                                    context
+                                        .read<ThemeBloc>()
+                                        .add(ChangeTheme(v));
+                                  }),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          title: Text("Code view theme: "),
+                          trailing: SizedBox(
+                            width: 190,
+                            child: DropdownButtonFormField<SyntaxDescription>(
+                                borderRadius: BorderRadius.circular(10.0),
+                                value: SyntaxDescription
+                                    .getAllSyntaxes[state.codeViewThemeIndex],
+                                items: [
+                                  for (var s
+                                      in SyntaxDescription.getAllSyntaxes)
+                                    DropdownMenuItem(
+                                      child: Text(s.themeName),
+                                      value: s,
+                                    ),
+                                ],
+                                onChanged: (a) {
+                                  contextWithBloc.read<SettingsBloc>().add(
+                                      SelectSyntaxTheme(SyntaxDescription
+                                          .getAllSyntaxes
+                                          .indexOf(a!)));
+                                }),
+                          ),
+                        ),
                         ListTile(
                           title: Text(
                             "Common",
@@ -138,11 +185,6 @@ class SettingsScreen extends StatelessWidget {
                         ),
                         for (int i = 0; i < state.tokens.length; i++)
                           (GptToken gptToken) {
-                            /*
-                                Theme.of(context)
-                                            .listTileTheme
-                                            .selectedTileColor
-                               */
                             return ListTile(
                               selected:
                                   state.selectedTokens.contains(gptToken.id),
@@ -199,18 +241,22 @@ class SettingsScreen extends StatelessWidget {
                           title: Text("Made with ❤ by animousen4"),
                         ),
                         ListTile(
-                          title: RichText(
-                              text: TextSpan(
-                            text: "Github",
-                            style:
-                                TextStyle(decoration: TextDecoration.underline),
-                            recognizer: new TapGestureRecognizer()
-                              ..onTap = () {
-                                //Logger().e("FFFF");
-                                launchUrl(
-                                    Uri.parse('https://github.com/animousen4'));
-                              },
-                          )),
+                          title: InkWell(
+                            hoverColor: Colors.transparent,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            onTap: () {
+                              //Logger().e("FFFF");
+                              launchUrl(
+                                  Uri.parse('https://github.com/animousen4'),
+                                  mode: LaunchMode.externalApplication);
+                            },
+                            child: Text(
+                              "Github",
+                              style: TextStyle(
+                                  decoration: TextDecoration.underline),
+                            ),
+                          ),
                           leading: Icon(SimpleIcons.github),
                         ),
                       ],
