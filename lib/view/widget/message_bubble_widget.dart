@@ -43,9 +43,9 @@ class MessageBubbleWidget extends StatelessWidget {
       line = lines[i];
 
       if (line.contains("```") && format) {
-        String filename = "code";
+        String codeSpec = "code";
         if (line.length > 3) {
-          filename += ".${line.substring(3)}";
+          codeSpec += "(${line.substring(3)})";
         }
 
         // form block
@@ -94,7 +94,7 @@ class MessageBubbleWidget extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(filename),
+                            Text(codeSpec),
                             SizedBox(
                               height: 20,
                               width: 20,
@@ -116,13 +116,18 @@ class MessageBubbleWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SingleChildScrollView(
-                      child: SyntaxView(
-                        fontSize: 11,
-                        code: curBlock,
-                        withZoom: false,
-                        syntax: Syntax.C,
-                        syntaxTheme: SyntaxTheme.obsidian(),
+                    Container(
+                      constraints: BoxConstraints(minWidth: double.infinity),
+                      alignment: Alignment.topLeft,
+                      color: const Color(0xFF293134),
+                      child: SingleChildScrollView(
+                        child: SyntaxView(
+                          fontSize: 11,
+                          code: curBlock,
+                          withZoom: false,
+                          syntax: Syntax.C,
+                          syntaxTheme: SyntaxTheme.obsidian(),
+                        ),
                       ),
                     ),
                     Container(
