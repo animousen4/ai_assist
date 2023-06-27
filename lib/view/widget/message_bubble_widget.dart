@@ -37,7 +37,8 @@ class MessageBubbleWidget extends StatelessWidget {
             child: buildWidget(context, widgetTheme),
           ),
           decoration: BoxDecoration(
-              color: widgetTheme.messageColor, borderRadius: BorderRadius.circular(8)),
+              color: widgetTheme.messageColor,
+              borderRadius: BorderRadius.circular(8)),
         ),
       ),
     );
@@ -62,8 +63,9 @@ class MessageBubbleWidget extends StatelessWidget {
         // form block
         widgets.add(Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child:
-              RichText(text: TextSpan(children: getTextSpanFromLine(curBlock, widgetTheme), style: GoogleFonts.roboto(color: widgetTheme.textColor))),
+          child: SelectableText.rich(TextSpan(
+              children: getTextSpanFromLine(curBlock, widgetTheme),
+              style: GoogleFonts.roboto(color: widgetTheme.textColor))),
         ));
         curBlock = "";
 
@@ -105,7 +107,9 @@ class MessageBubbleWidget extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(codeSpec, style: GoogleFonts.roboto(color: widgetTheme.textColor)),
+                            Text(codeSpec,
+                                style: GoogleFonts.roboto(
+                                    color: widgetTheme.textColor)),
                             SizedBox(
                               height: 20,
                               width: 20,
@@ -113,9 +117,11 @@ class MessageBubbleWidget extends StatelessWidget {
                                 onPressed: () async {
                                   await Clipboard.setData(
                                       ClipboardData(text: code));
-
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Copied!")));
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(
+                                    content: Text("Copied!"),
+                                    duration: Duration(milliseconds: 300),
+                                  ));
                                 },
                                 padding: EdgeInsets.zero,
                                 icon: Icon(Icons.copy),
@@ -165,12 +171,13 @@ class MessageBubbleWidget extends StatelessWidget {
     if (curBlock.isNotEmpty) {
       widgets.add(Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: RichText(
-              text: TextSpan(
-                  style: GoogleFonts.roboto(color: widgetTheme.textColor),
-                  children: getTextSpanFromLine(curBlock.endsWith("\n")
+          child: SelectableText.rich(TextSpan(
+              style: GoogleFonts.roboto(color: widgetTheme.textColor),
+              children: getTextSpanFromLine(
+                  curBlock.endsWith("\n")
                       ? curBlock.substring(0, curBlock.length - 1)
-                      : curBlock, widgetTheme)))));
+                      : curBlock,
+                  widgetTheme)))));
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -179,13 +186,13 @@ class MessageBubbleWidget extends StatelessWidget {
     );
   }
 
-  List<TextSpan> getTextSpanFromLine(String line, MessageBubbleTheme widgetTheme) {
+  List<TextSpan> getTextSpanFromLine(
+      String line, MessageBubbleTheme widgetTheme) {
     List<TextSpan> list = [];
     String curText = "";
     for (int i = 0; i < line.length; i++) {
       if (line[i] == "`") {
         list.add(TextSpan(text: curText));
-
         curText = "";
         i++;
         while (i < line.length && line[i] != '`') {
@@ -195,7 +202,8 @@ class MessageBubbleWidget extends StatelessWidget {
 
         list.add(TextSpan(
             text: curText,
-            style: GoogleFonts.robotoMono(color: widgetTheme.textHighlightColor)));
+            style:
+                GoogleFonts.robotoMono(color: widgetTheme.textHighlightColor)));
 
         curText = "";
       } else {

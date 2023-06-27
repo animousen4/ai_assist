@@ -78,6 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                     builder: (contextt) => AlertDialog(
                                           title: Text("New name"),
                                           content: TextFormField(
+                                            onFieldSubmitted: (value) {
+                                              context
+                                                  .read<SelectionBloc>()
+                                                  .add(Rename(newName));
+                                              context.popRoute();
+                                            },
                                             onChanged: (t) => newName = t,
                                           ),
                                           actions: [
